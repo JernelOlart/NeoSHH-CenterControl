@@ -64,13 +64,13 @@ export function setupWebSocket(server) {
 
           stream.on('data', data => {
             if (ws.readyState === ws.OPEN) {
-              ws.send(data);
+              ws.send(data.toString('utf-8'));
             }
           });
 
           stream.stderr.on('data', data => {
             if (ws.readyState === ws.OPEN) {
-              ws.send(data);
+              ws.send(data.toString('utf-8'));
             }
           });
         }
@@ -93,9 +93,8 @@ export function setupWebSocket(server) {
     // Handle messages from browser
     ws.on('message', message => {
       try {
-        // Can be a JSON control command (resize) or raw input
-        const str = message.toString();
-        if (str.startsWith('{') && str.endsWith('}')) {
+        const str = typeof message === 'string' ? message : message.toString('utf-8');
+        if (str.startsWith('{"type":"resize"')) {
           const parsed = JSON.parse(str);
           if (parsed.type === 'resize' && sshStream) {
             sshStream.setWindow(parsed.rows || 30, parsed.cols || 100, 0, 0);

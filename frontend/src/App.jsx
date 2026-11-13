@@ -7,6 +7,8 @@ import TerminalModal from './components/TerminalModal';
 import MetricsDetailModal from './components/MetricsDetailModal';
 import FileManagerModal from './components/FileManagerModal';
 import DockerManagerModal from './components/DockerManagerModal';
+import GitManagerModal from './components/GitManagerModal';
+import FirewallModal from './components/FirewallModal';
 import {
   fetchServers,
   createServer,
@@ -32,6 +34,8 @@ export default function App() {
   const [detailsServer, setDetailsServer] = useState(null);
   const [filesServer, setFilesServer] = useState(null);
   const [dockerServer, setDockerServer] = useState(null);
+  const [gitServer, setGitServer] = useState(null);
+  const [firewallServer, setFirewallServer] = useState(null);
 
   // Terminal Tabs state
   const [activeSessions, setActiveSessions] = useState([]);
@@ -268,6 +272,8 @@ export default function App() {
                 onOpenDetails={setDetailsServer}
                 onOpenFiles={setFilesServer}
                 onOpenDocker={setDockerServer}
+                onOpenGit={setGitServer}
+                onOpenFirewall={setFirewallServer}
                 onEdit={(s) => {
                   setEditingServer(s);
                   setIsServerModalOpen(true);
@@ -324,6 +330,18 @@ export default function App() {
         isOpen={Boolean(dockerServer)}
         onClose={() => setDockerServer(null)}
         onOpenTerminal={handleConnectWeb}
+      />
+
+      <GitManagerModal
+        server={gitServer}
+        isOpen={Boolean(gitServer)}
+        onClose={() => setGitServer(null)}
+      />
+
+      <FirewallModal
+        server={firewallServer}
+        isOpen={Boolean(firewallServer)}
+        onClose={() => setFirewallServer(null)}
       />
 
       <TerminalModal

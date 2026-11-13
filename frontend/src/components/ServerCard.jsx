@@ -17,7 +17,9 @@ import {
   Globe,
   Sliders,
   ArrowRight,
-  AlertTriangle
+  AlertTriangle,
+  GitBranch,
+  Shield
 } from 'lucide-react';
 
 export default function ServerCard({
@@ -26,6 +28,8 @@ export default function ServerCard({
   onOpenDetails,
   onOpenFiles,
   onOpenDocker,
+  onOpenGit,
+  onOpenFirewall,
   onEdit,
   onDelete,
   onRefresh,
@@ -189,6 +193,26 @@ export default function ServerCard({
                   >
                     <Box className="w-3.5 h-3.5 text-blue-400" />
                     <span>Gestionar Docker</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onOpenGit(server);
+                    }}
+                    className="w-full text-left px-3 py-2 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
+                  >
+                    <GitBranch className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Control Git (Pull / Clonar)</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onOpenFirewall(server);
+                    }}
+                    className="w-full text-left px-3 py-2 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
+                  >
+                    <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Firewall & Puertos UFW</span>
                   </button>
                   {hasWeb && (
                     <a
@@ -355,11 +379,11 @@ export default function ServerCard({
           )}
         </div>
 
-        {/* Row 2: Secondary Quick Tools (Files, Docker, Specs) */}
-        <div className="grid grid-cols-3 gap-1.5">
+        {/* Row 2: Secondary Quick Tools (Files, Docker, Git, Ports) */}
+        <div className="grid grid-cols-4 gap-1 sm:gap-1.5">
           <button
             onClick={() => onOpenFiles(server)}
-            className="btn-cyan-secondary py-1 px-2 text-[11px] font-mono justify-center"
+            className="btn-cyan-secondary py-1 px-1.5 text-[10px] sm:text-[11px] font-mono justify-center"
             title="Gestor de archivos SFTP"
           >
             <FolderOpen className="w-3 h-3 text-electric-cyan" />
@@ -368,7 +392,7 @@ export default function ServerCard({
 
           <button
             onClick={() => onOpenDocker(server)}
-            className="btn-cyan-secondary py-1 px-2 text-[11px] font-mono justify-center"
+            className="btn-cyan-secondary py-1 px-1.5 text-[10px] sm:text-[11px] font-mono justify-center"
             title="Gestionar contenedores Docker"
           >
             <Box className="w-3 h-3 text-blue-400" />
@@ -376,12 +400,21 @@ export default function ServerCard({
           </button>
 
           <button
-            onClick={() => onOpenDetails(server)}
-            className="btn-cyan-secondary py-1 px-2 text-[11px] font-mono justify-center"
-            title="Ver servicios y telemetría completa"
+            onClick={() => onOpenGit(server)}
+            className="btn-cyan-secondary py-1 px-1.5 text-[10px] sm:text-[11px] font-mono justify-center"
+            title="Control de repositorios Git"
           >
-            <Sliders className="w-3 h-3 text-fog-text" />
-            <span>Servicios</span>
+            <GitBranch className="w-3 h-3 text-purple-400" />
+            <span>Git</span>
+          </button>
+
+          <button
+            onClick={() => onOpenFirewall(server)}
+            className="btn-cyan-secondary py-1 px-1.5 text-[10px] sm:text-[11px] font-mono justify-center"
+            title="Firewall y reglas de puertos UFW"
+          >
+            <Shield className="w-3 h-3 text-emerald-400" />
+            <span>Puertos</span>
           </button>
         </div>
       </div>

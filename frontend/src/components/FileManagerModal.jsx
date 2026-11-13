@@ -2,17 +2,17 @@ import React, { useState, useEffect } from 'react';
 import {
   X,
   Folder,
-  File,
   FileText,
-  FileCode,
   ArrowUp,
   RefreshCw,
-  Eye,
-  Download,
   FolderOpen,
-  HardDrive
+  Save,
+  Trash2,
+  Check,
+  FilePlus,
+  ArrowRight
 } from 'lucide-react';
-import { fetchFiles, readFilePreview } from '../services/api';
+import { fetchFiles, readFilePreview, saveFile, deleteFile } from '../services/api';
 
 export default function FileManagerModal({ server, isOpen, onClose }) {
   const [currentPath, setCurrentPath] = useState('/root');
@@ -22,6 +22,12 @@ export default function FileManagerModal({ server, isOpen, onClose }) {
   const [viewingFile, setViewingFile] = useState(null);
   const [fileContent, setFileContent] = useState('');
   const [loadingFile, setLoadingFile] = useState(false);
+  const [savingFile, setSavingFile] = useState(false);
+  const [savedSuccess, setSavedSuccess] = useState(false);
+
+  // New file creation form
+  const [creatingFile, setCreatingFile] = useState(false);
+  const [newFileName, setNewFileName] = useState('');
 
   const loadDirectory = async (targetPath) => {
     if (!server) return;
@@ -42,6 +48,7 @@ export default function FileManagerModal({ server, isOpen, onClose }) {
     if (isOpen && server) {
       loadDirectory('/root');
       setViewingFile(null);
+      setCreatingFile(false);
     }
   }, [isOpen, server?.id]);
 
@@ -68,6 +75,7 @@ export default function FileManagerModal({ server, isOpen, onClose }) {
     const filePath = `${currentPath}${separator}${entry.name}`;
     setViewingFile(filePath);
     setLoadingFile(true);
+    setSavedSuccess(false);
     try {
       const res = await readFilePreview(server.id, filePath);
       setFileContent(res.content || '');
@@ -75,6 +83,52 @@ export default function FileManagerModal({ server, isOpen, onClose }) {
       setFileContent(`[Error al leer archivo: ${err.message}]`);
     } finally {
       setLoadingFile(false);
+    }
+  };
+
+  const handleSaveFile = async () => {
+    if (!viewingFile) return;
+    setSavingFile(true);
+    try {
+      await saveFile(server.id, viewingFile, fileContent);
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 3000);
+    } catch (err) {
+      alert(`Error al guardar archivo: ${err.message}`);
+    } finally {
+      setSavingFile(false);
+    }
+  };
+
+  const handleDeleteItem = async (e, entry) => {
+    e.stopPropagation();
+    const separator = currentPath === '/' ? '' : '/';
+    const targetPath = `${currentPath}${separator}${entry.name}`;
+    if (!window.confirm(`¿Deseas eliminar permanentemente "${entry.name}"?`)) return;
+
+    try {
+      await deleteFile(server.id, targetPath, entry.isDirectory);
+      if (viewingFile === targetPath) setViewingFile(null);
+      await loadDirectory(currentPath);
+    } catch (err) {
+      alert(`Error al eliminar: ${err.message}`);
+    }
+  };
+
+  const handleCreateNewFile = async (e) => {
+    e.preventDefault();
+    if (!newFileName.trim()) return;
+    const separator = currentPath === '/' ? '' : '/';
+    const filePath = `${currentPath}${separator}${newFileName.trim()}`;
+    try {
+      await saveFile(server.id, filePath, '');
+      setNewFileName('');
+      setCreatingFile(false);
+      await loadDirectory(currentPath);
+      setViewingFile(filePath);
+      setFileContent('');
+    } catch (err) {
+      alert(`Error al crear archivo: ${err.message}`);
     }
   };
 
@@ -86,16 +140,15 @@ export default function FileManagerModal({ server, isOpen, onClose }) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
-  // Breadcrumbs
   const pathParts = currentPath.split('/').filter(Boolean);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-void-base/85 backdrop-blur-sm">
-      <div className="bg-elevated-surface rounded-cards-lg w-full max-w-4xl border border-border-smoke flex flex-col h-[85vh] overflow-hidden shadow-2xl">
+      <div className="bg-elevated-surface rounded-cards-lg w-full max-w-4xl border border-border-smoke flex flex-col h-[86vh] overflow-hidden shadow-2xl">
         {/* Modal Header */}
         <div className="p-3.5 sm:p-4 border-b border-border-smoke/70 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-nodes bg-white/5 border border-electric-cyan/30 flex items-center justify-center text-electric-cyan">
+            <div className="w-8 h-8 rounded-nodes bg-white/5 border border-electric-cyan/30 flex items-center justify-center text-electric-cyan shadow-[0_0_10px_rgba(23,186,237,0.2)]">
               <FolderOpen className="w-4 h-4" />
             </div>
             <div className="min-w-0">
@@ -114,6 +167,14 @@ export default function FileManagerModal({ server, isOpen, onClose }) {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCreatingFile(!creatingFile)}
+              className="btn-cyan-secondary px-3 py-1.5 text-xs font-mono"
+              title="Crear nuevo archivo de texto"
+            >
+              <FilePlus className="w-3.5 h-3.5 text-electric-cyan" />
+              <span className="hidden sm:inline">Nuevo Archivo</span>
+            </button>
             <button
               onClick={() => loadDirectory(currentPath)}
               disabled={loading}
@@ -168,7 +229,24 @@ export default function FileManagerModal({ server, isOpen, onClose }) {
           })}
         </div>
 
-        {/* Content area: Explorer table or File Preview */}
+        {/* Create new file inline input */}
+        {creatingFile && (
+          <form onSubmit={handleCreateNewFile} className="p-2.5 bg-void-base border-b border-border-smoke/60 flex items-center gap-2">
+            <span className="text-xs font-mono text-fog-text">Nuevo archivo:</span>
+            <input
+              type="text"
+              required
+              placeholder="nombre.txt o .env o docker-compose.yml"
+              value={newFileName}
+              onChange={(e) => setNewFileName(e.target.value)}
+              className="flex-1 px-3 py-1 bg-deep-panel border border-border-smoke rounded-pills text-xs font-mono text-ash-text focus:outline-none focus:border-electric-cyan/40"
+            />
+            <button type="submit" className="btn-cyan-primary px-3 py-1 text-xs">Crear</button>
+            <button type="button" onClick={() => setCreatingFile(false)} className="btn-cyan-secondary px-3 py-1 text-xs">Cancelar</button>
+          </form>
+        )}
+
+        {/* Content area: Explorer table & File Editor */}
         <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
           {/* File listing column */}
           <div className={`flex-1 overflow-y-auto p-2 sm:p-3 ${viewingFile ? 'hidden md:block md:w-1/2 border-r border-border-smoke/60' : 'w-full'}`}>
@@ -204,9 +282,15 @@ export default function FileManagerModal({ server, isOpen, onClose }) {
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-4 text-fog-text text-[11px] flex-shrink-0">
+                    <div className="flex items-center gap-3 text-fog-text text-[11px] flex-shrink-0">
                       <span>{entry.isDirectory ? '--' : formatSize(entry.size)}</span>
-                      <span className="hidden sm:inline opacity-60">{entry.permissions}</span>
+                      <button
+                        onClick={(e) => handleDeleteItem(e, entry)}
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-rose-500/20 hover:text-rose-400 transition"
+                        title="Eliminar elemento"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -214,31 +298,56 @@ export default function FileManagerModal({ server, isOpen, onClose }) {
             )}
           </div>
 
-          {/* File Preview Drawer / Column */}
+          {/* File Editor & Viewer Drawer */}
           {viewingFile && (
             <div className="flex-1 flex flex-col h-full bg-void-base overflow-hidden md:w-1/2">
               <div className="p-2.5 sm:p-3 bg-deep-panel border-b border-border-smoke/60 flex items-center justify-between text-xs font-mono">
-                <span className="text-cloud-white truncate font-medium max-w-[240px]" title={viewingFile}>
+                <span className="text-cloud-white truncate font-medium max-w-[200px]" title={viewingFile}>
                   {viewingFile.split('/').pop()}
                 </span>
-                <button
-                  onClick={() => setViewingFile(null)}
-                  className="p-1 rounded hover:bg-muted-shell text-fog-text hover:text-cloud-white"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleSaveFile}
+                    disabled={savingFile}
+                    className="btn-cyan-primary px-3 py-1 text-xs"
+                    title="Guardar cambios en el archivo"
+                  >
+                    {savedSuccess ? (
+                      <>
+                        <Check className="w-3 h-3 text-dark-teal" />
+                        <span>Guardado</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-3 h-3" />
+                        <span>{savingFile ? 'Guardando...' : 'Guardar'}</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => setViewingFile(null)}
+                    className="p-1 rounded hover:bg-muted-shell text-fog-text hover:text-cloud-white"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
-              <div className="flex-1 p-3 overflow-auto font-mono text-xs text-ash-text bg-void-base">
+              <div className="flex-1 p-2 sm:p-3 overflow-hidden flex flex-col bg-void-base">
                 {loadingFile ? (
-                  <div className="flex items-center gap-2 text-fog-text py-6">
+                  <div className="flex items-center gap-2 text-fog-text py-6 font-mono text-xs">
                     <RefreshCw className="w-3.5 h-3.5 animate-spin text-electric-cyan" />
-                    <span>Leyendo archivo...</span>
+                    <span>Cargando contenido...</span>
                   </div>
                 ) : (
-                  <pre className="whitespace-pre-wrap leading-relaxed select-text font-mono text-[11px]">
-                    {fileContent}
-                  </pre>
+                  <textarea
+                    value={fileContent}
+                    onChange={(e) => setFileContent(e.target.value)}
+                    className="w-full h-full p-2 bg-void-base font-mono text-[11px] text-ash-text leading-relaxed resize-none focus:outline-none border border-transparent focus:border-white/10 rounded"
+                    spellCheck={false}
+                  />
                 )}
               </div>
             </div>
@@ -248,4 +357,3 @@ export default function FileManagerModal({ server, isOpen, onClose }) {
     </div>
   );
 }
-

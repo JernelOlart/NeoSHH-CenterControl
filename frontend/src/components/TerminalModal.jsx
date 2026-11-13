@@ -69,6 +69,7 @@ export default function TerminalModal({
 
     term.open(terminalRef.current);
     fitAddon.fit();
+    term.focus();
 
     xtermInstance.current = term;
     fitAddonInstance.current = fitAddon;
@@ -78,18 +79,33 @@ export default function TerminalModal({
     const wsUrl = `${protocol}//${host}/ws/terminal?serverId=${currentServer.id}`;
 
     const ws = new WebSocket(wsUrl);
+    ws.binaryType = 'arraybuffer';
     socketRef.current = ws;
 
     ws.onopen = () => {
       setConnected(true);
+      term.focus();
       setTimeout(() => {
-        fitAddon.fit();
-        ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
-      }, 300);
+        try {
+          fitAddon.fit();
+          ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+        } catch (e) {}
+      }, 200);
     };
 
-    ws.onmessage = (event) => {
-      term.write(event.data);
+    ws.onmessage = async (event) => {
+      try {
+        if (typeof event.data === 'string') {
+          term.write(event.data);
+        } else if (event.data instanceof ArrayBuffer) {
+          term.write(new Uint8Array(event.data));
+        } else if (event.data instanceof Blob) {
+          const buf = await event.data.arrayBuffer();
+          term.write(new Uint8Array(buf));
+        }
+      } catch (err) {
+        console.error('Error writing to xterm:', err);
+      }
     };
 
     ws.onerror = (err) => {
@@ -214,7 +230,10 @@ export default function TerminalModal({
         </div>
 
         {/* Terminal Container */}
-        <div className="flex-1 bg-void-base p-3 sm:p-4 overflow-hidden relative">
+        <div
+          onClick={() => xtermInstance.current?.focus()}
+          className="flex-1 bg-void-base p-3 sm:p-4 overflow-hidden relative cursor-text"
+        >
           <div ref={terminalRef} className="w-full h-full" />
         </div>
       </div>
