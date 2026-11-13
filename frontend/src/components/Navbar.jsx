@@ -14,8 +14,8 @@ export default function Navbar({
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-void-base border-b border-border-smoke backdrop-blur-md">
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-[66px] flex items-center justify-between gap-3 sm:gap-4">
+    <header className="sticky top-0 z-40 w-full bg-void-base/95 border-b border-border-smoke backdrop-blur-md">
+      <div className="max-w-[1240px] mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-[66px] flex items-center justify-between gap-3 sm:gap-4">
         {/* Brand / Logo */}
         <div className="flex items-center gap-2.5 sm:gap-3 flex-shrink-0">
           <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-nodes bg-elevated-surface border border-electric-cyan/30 flex items-center justify-center relative overflow-hidden shadow-[0_0_12px_rgba(23,186,237,0.25)]">
@@ -27,16 +27,6 @@ export default function Navbar({
               NeoShh <span className="text-electric-cyan font-normal">Control</span>
             </span>
             <div className="hidden lg:flex items-center gap-1.5 ml-2 pl-3 border-l border-border-smoke/70">
-              <a
-                href="https://www.jernelsystems.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[11px] font-mono text-fog-text hover:text-electric-cyan transition flex items-center gap-1"
-                title="jernelsystems.com"
-              >
-                <span>jernelsystems</span>
-              </a>
-              <span className="text-border-smoke text-xs">•</span>
               <a
                 href="https://neotechsolutions.mx"
                 target="_blank"
@@ -62,15 +52,15 @@ export default function Navbar({
         </div>
 
         {/* Center: Search & Filter (Desktop / Tablet) */}
-        <div className="hidden md:flex items-center gap-2 flex-1 max-w-md mx-2">
-          <div className="relative w-full">
-            <Search className="w-4 h-4 text-fog-text absolute left-3.5 top-1/2 -translate-y-1/2" />
+        <div className="hidden md:flex items-center gap-2 flex-1 max-w-lg min-w-0 mx-2 sm:mx-4">
+          <div className="relative flex-1 min-w-0">
+            <Search className="w-4 h-4 text-fog-text absolute left-3.5 top-1/2 -translate-y-1/2 flex-shrink-0" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Buscar por nombre, host, proveedor..."
-              className="w-full pl-9 pr-3 py-1.5 bg-elevated-surface border border-border-smoke rounded-pills text-xs sm:text-sm text-ash-text placeholder-fog-text focus:outline-none focus:border-electric-cyan/40 transition"
+              className="w-full pl-9 pr-3 py-1.5 bg-elevated-surface border border-border-smoke rounded-pills text-xs sm:text-sm text-ash-text placeholder-fog-text focus:outline-none focus:border-electric-cyan/40 transition truncate"
             />
           </div>
 
@@ -78,7 +68,7 @@ export default function Navbar({
             <select
               value={selectedTag}
               onChange={(e) => setSelectedTag(e.target.value)}
-              className="bg-elevated-surface border border-border-smoke rounded-pills text-xs text-ash-text px-3 py-1.5 focus:outline-none focus:border-electric-cyan/40 cursor-pointer"
+              className="bg-elevated-surface border border-border-smoke rounded-pills text-xs text-ash-text px-3 py-1.5 focus:outline-none focus:border-electric-cyan/40 cursor-pointer flex-shrink-0 max-w-[160px]"
             >
               <option value="">Todas las etiquetas</option>
               {allTags.map((tag) => (
@@ -91,7 +81,7 @@ export default function Navbar({
         </div>
 
         {/* Action CTAs */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {/* Mobile search toggle */}
           <button
             onClick={() => setMobileSearchOpen(!mobileSearchOpen)}

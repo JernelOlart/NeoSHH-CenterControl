@@ -173,10 +173,8 @@ A `.gitignore` is already configured to exclude all of the above.
 
 ## Credits
 
-Made by [Jernel Olart](https://github.com/JernelOlart)
-
-- [jernelsystems.com](https://www.jernelsystems.com)
 - [neotechsolutions.mx](https://neotechsolutions.mx)
+- [GitHub @JernelOlart](https://github.com/JernelOlart)
 
 ---
 

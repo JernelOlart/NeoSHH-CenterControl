@@ -22,6 +22,7 @@ import NginxModal from './components/NginxModal';
 import NotesModal from './components/NotesModal';
 import AlertsPanel from './components/AlertsPanel';
 import EnvManagerModal from './components/EnvManagerModal';
+import PowerManagementModal from './components/PowerManagementModal';
 import {
   fetchServers,
   createServer,
@@ -62,6 +63,7 @@ export default function App() {
   const [nginxServer, setNginxServer] = useState(null);
   const [notesServer, setNotesServer] = useState(null);
   const [envServer, setEnvServer] = useState(null);
+  const [powerServer, setPowerServer] = useState(null);
 
   // Terminal Tabs state
   const [activeSessions, setActiveSessions] = useState([]);
@@ -215,27 +217,18 @@ export default function App() {
             </p>
           </div>
 
+          {/* Server status pill (eliminates duplicate buttons with top Navbar) */}
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                setEditingServer(null);
-                setIsServerModalOpen(true);
-              }}
-              className="btn-cyan-primary px-3.5 py-1.5 text-xs"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Nuevo VPS</span>
-              <ArrowRight className="w-3 h-3 opacity-80" />
-            </button>
-            <button
-              onClick={handleRefreshAll}
-              disabled={isRefreshingAll}
-              className="btn-cyan-secondary px-3.5 py-1.5 text-xs disabled:opacity-40"
-              title="Actualizar métricas de todos los VPS"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingAll ? 'animate-spin text-electric-cyan' : ''}`} />
-              <span className="hidden sm:inline">Refrescar</span>
-            </button>
+            <div className="px-3 py-1.5 rounded-pills bg-deep-panel border border-border-smoke/70 text-xs font-mono flex items-center gap-2 shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-cloud-white font-semibold">{servers.length}</span>
+              <span className="text-fog-text">{servers.length === 1 ? 'VPS registrado' : 'VPS registrados'}</span>
+            </div>
+            {servers.some(s => s.status === 'online') && (
+              <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-pills hidden sm:inline-flex items-center gap-1">
+                <span>{servers.filter(s => s.status === 'online').length} en línea</span>
+              </span>
+            )}
           </div>
         </div>
 
@@ -312,6 +305,7 @@ export default function App() {
                 onOpenNginx={setNginxServer}
                 onOpenNotes={setNotesServer}
                 onOpenEnv={setEnvServer}
+                onOpenPower={setPowerServer}
                 onEdit={(s) => {
                   setEditingServer(s);
                   setIsServerModalOpen(true);
@@ -342,19 +336,6 @@ export default function App() {
           {/* Credit Buttons */}
           <div className="flex items-center gap-2 flex-wrap justify-center">
             <span className="text-[11px] font-mono text-fog-text mr-1">Créditos:</span>
-
-            {/* Jernel Systems */}
-            <a
-              href="https://www.jernelsystems.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-cyan-secondary px-3 py-1.5 text-xs font-mono inline-flex items-center gap-1.5 hover:border-electric-cyan/60 hover:text-cloud-white transition group"
-              title="Visitar www.jernelsystems.com"
-            >
-              <Globe className="w-3.5 h-3.5 text-electric-cyan group-hover:scale-110 transition-transform" />
-              <span>jernelsystems.com</span>
-              <ExternalLink className="w-2.5 h-2.5 opacity-60" />
-            </a>
 
             {/* Neotech Solutions */}
             <a
@@ -508,6 +489,13 @@ export default function App() {
         server={envServer}
         isOpen={Boolean(envServer)}
         onClose={() => setEnvServer(null)}
+      />
+
+      <PowerManagementModal
+        server={powerServer}
+        isOpen={Boolean(powerServer)}
+        onClose={() => setPowerServer(null)}
+        onServerUpdated={loadServers}
       />
 
       {/* Floating System Alerts (offline, disk >80%, RAM >90%) */}

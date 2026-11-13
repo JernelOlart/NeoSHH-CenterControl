@@ -441,3 +441,52 @@ export async function downloadEnvFile(serverId, filePath) {
   a.remove();
   window.URL.revokeObjectURL(url);
 }
+
+// Power & Maintenance Actions
+export async function rebootServer(serverId) {
+  const res = await fetch(`${BASE_URL}/servers/${serverId}/power/reboot`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Error al enviar orden de reinicio');
+  }
+  return res.json();
+}
+
+export async function poweroffServer(serverId) {
+  const res = await fetch(`${BASE_URL}/servers/${serverId}/power/shutdown`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Error al enviar orden de apagado');
+  }
+  return res.json();
+}
+
+export async function dropServerCaches(serverId) {
+  const res = await fetch(`${BASE_URL}/servers/${serverId}/power/drop-caches`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Error al liberar memoria caché');
+  }
+  return res.json();
+}
+
+export async function cleanServerDisk(serverId) {
+  const res = await fetch(`${BASE_URL}/servers/${serverId}/power/clean-disk`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Error al ejecutar limpieza de disco');
+  }
+  return res.json();
+}

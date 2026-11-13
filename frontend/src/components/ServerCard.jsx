@@ -29,7 +29,8 @@ import {
   Layers,
   BarChart2,
   StickyNote,
-  FileCode2
+  FileCode2,
+  Power
 } from 'lucide-react';
 
 export default function ServerCard({
@@ -52,6 +53,7 @@ export default function ServerCard({
   onOpenNginx,
   onOpenNotes,
   onOpenEnv,
+  onOpenPower,
   onEdit,
   onDelete,
   onRefresh,
@@ -341,6 +343,23 @@ export default function ServerCard({
                       <span>Abrir web en navegador</span>
                     </a>
                   )}
+
+                  <div className="h-[1px] bg-border-smoke/60 my-1" />
+
+                  {/* Energía & Mantenimiento */}
+                  <div className="px-3 py-1 text-[10px] font-mono text-fog-text uppercase tracking-wider">
+                    Energía & Mantenimiento
+                  </div>
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      if (onOpenPower) onOpenPower(server);
+                    }}
+                    className="w-full text-left px-3 py-1.5 text-rose-300 hover:bg-rose-500/10 hover:text-rose-200 flex items-center gap-2"
+                  >
+                    <Power className="w-3.5 h-3.5 text-rose-400" />
+                    <span>Control de Energía (Reinicio / Apagado)</span>
+                  </button>
 
                   <div className="h-[1px] bg-border-smoke/60 my-1" />
 

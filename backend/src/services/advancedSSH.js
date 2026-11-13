@@ -624,3 +624,62 @@ export async function saveEnvFile(server, filePath, content) {
     return { success: false, error: err.message };
   }
 }
+
+// ---------------------------------------------------------------------------
+// 21. rebootServer
+// ---------------------------------------------------------------------------
+export async function rebootServer(server) {
+  try {
+    const cmd = '(sudo nohup sh -c "sleep 1 && (systemctl reboot || shutdown -r now || reboot)" >/dev/null 2>&1 &) || (nohup sh -c "sleep 1 && reboot" >/dev/null 2>&1 &)';
+    await sshExec(server, cmd, 10000);
+    return { success: true, message: 'Orden de reinicio enviada correctamente. El servidor se reiniciará en unos segundos.' };
+  } catch (err) {
+    // If the SSH connection dropped because of the reboot itself
+    if (/closed|ended|reset|terminated/i.test(err.message)) {
+      return { success: true, message: 'Orden de reinicio recibida (sesión SSH cerrada por el host).' };
+    }
+    return { success: false, error: err.message };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 22. poweroffServer
+// ---------------------------------------------------------------------------
+export async function poweroffServer(server) {
+  try {
+    const cmd = '(sudo nohup sh -c "sleep 1 && (systemctl poweroff || shutdown -h now || poweroff)" >/dev/null 2>&1 &) || (nohup sh -c "sleep 1 && poweroff" >/dev/null 2>&1 &)';
+    await sshExec(server, cmd, 10000);
+    return { success: true, message: 'Orden de apagado enviada correctamente.' };
+  } catch (err) {
+    if (/closed|ended|reset|terminated/i.test(err.message)) {
+      return { success: true, message: 'Orden de apagado recibida.' };
+    }
+    return { success: false, error: err.message };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 23. dropCaches (Liberar memoria RAM / buffers)
+// ---------------------------------------------------------------------------
+export async function dropCaches(server) {
+  try {
+    const cmd = '(sudo sync && echo 3 | sudo tee /proc/sys/vm/drop_caches) 2>/dev/null || (sync && echo 3 > /proc/sys/vm/drop_caches) 2>/dev/null; free -m';
+    const { stdout } = await sshExec(server, cmd, 15000);
+    return { success: true, message: 'Memoria caché liberada con éxito', output: stdout };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 24. cleanDisk (Limpieza de logs y paquetes)
+// ---------------------------------------------------------------------------
+export async function cleanDisk(server) {
+  try {
+    const cmd = '(sudo journalctl --vacuum-time=3d 2>&1 || true) && (sudo apt-get clean 2>&1 || sudo yum clean all 2>&1 || true) && df -h /';
+    const { stdout } = await sshExec(server, cmd, 25000);
+    return { success: true, message: 'Limpieza de disco completada', output: stdout };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}

@@ -20,7 +20,11 @@ import {
   runSSHCommand,
   findEnvFiles,
   getEnvContent,
-  saveEnvFile
+  saveEnvFile,
+  rebootServer,
+  poweroffServer,
+  dropCaches,
+  cleanDisk
 } from '../services/advancedSSH.js';
 import path from 'path';
 
@@ -343,6 +347,62 @@ router.get(['/api/servers/:id/env/download', '/:id/env/download', '/servers/:id/
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
     res.send(content);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 22. POST /api/servers/:id/power/reboot -> rebootServer
+// ---------------------------------------------------------------------------
+router.post(['/api/servers/:id/power/reboot', '/:id/power/reboot', '/servers/:id/power/reboot'], async (req, res) => {
+  try {
+    const server = getServerOr404(req, res);
+    if (!server) return;
+    const result = await rebootServer(server);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 23. POST /api/servers/:id/power/shutdown -> poweroffServer
+// ---------------------------------------------------------------------------
+router.post(['/api/servers/:id/power/shutdown', '/:id/power/shutdown', '/servers/:id/power/shutdown'], async (req, res) => {
+  try {
+    const server = getServerOr404(req, res);
+    if (!server) return;
+    const result = await poweroffServer(server);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 24. POST /api/servers/:id/power/drop-caches -> dropCaches
+// ---------------------------------------------------------------------------
+router.post(['/api/servers/:id/power/drop-caches', '/:id/power/drop-caches', '/servers/:id/power/drop-caches'], async (req, res) => {
+  try {
+    const server = getServerOr404(req, res);
+    if (!server) return;
+    const result = await dropCaches(server);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 25. POST /api/servers/:id/power/clean-disk -> cleanDisk
+// ---------------------------------------------------------------------------
+router.post(['/api/servers/:id/power/clean-disk', '/:id/power/clean-disk', '/servers/:id/power/clean-disk'], async (req, res) => {
+  try {
+    const server = getServerOr404(req, res);
+    if (!server) return;
+    const result = await cleanDisk(server);
+    res.json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
