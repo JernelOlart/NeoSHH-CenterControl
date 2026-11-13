@@ -392,3 +392,52 @@ export async function downloadDirectoryZip(serverId, dirPath) {
   a.remove();
   window.URL.revokeObjectURL(url);
 }
+
+// Env Manager APIs
+export async function fetchEnvFiles(serverId) {
+  const res = await fetch(`${BASE_URL}/servers/${serverId}/env/files`);
+  if (!res.ok) throw new Error('Error al buscar archivos .env');
+  return res.json();
+}
+
+export async function fetchEnvContent(serverId, filePath) {
+  const res = await fetch(`${BASE_URL}/servers/${serverId}/env/content?path=${encodeURIComponent(filePath)}`);
+  if (!res.ok) throw new Error('Error al leer archivo .env');
+  return res.json();
+}
+
+export async function saveEnvContent(serverId, filePath, content) {
+  const res = await fetch(`${BASE_URL}/servers/${serverId}/env/save`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path: filePath, content })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Error al guardar archivo .env');
+  }
+  return res.json();
+}
+
+export async function downloadEnvFile(serverId, filePath) {
+  const res = await fetch(`${BASE_URL}/servers/${serverId}/env/download?path=${encodeURIComponent(filePath)}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Error al descargar archivo .env');
+  }
+  const blob = await res.blob();
+  const disposition = res.headers.get('Content-Disposition') || '';
+  let filename = '.env';
+  const match = disposition.match(/filename="?([^";]+)"?/);
+  if (match && match[1]) {
+    filename = match[1];
+  }
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+}

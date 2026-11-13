@@ -17,8 +17,12 @@ import {
   getNginxSites,
   getNginxSiteContent,
   saveNginxSite,
-  runSSHCommand
+  runSSHCommand,
+  findEnvFiles,
+  getEnvContent,
+  saveEnvFile
 } from '../services/advancedSSH.js';
+import path from 'path';
 
 const router = Router();
 
@@ -274,6 +278,71 @@ router.post(['/api/servers/:id/command', '/:id/command', '/servers/:id/command']
     const { command } = req.body || {};
     const result = await runSSHCommand(server, command);
     res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 18. GET /api/servers/:id/env/files -> findEnvFiles
+// ---------------------------------------------------------------------------
+router.get(['/api/servers/:id/env/files', '/:id/env/files', '/servers/:id/env/files'], async (req, res) => {
+  try {
+    const server = getServerOr404(req, res);
+    if (!server) return;
+    const result = await findEnvFiles(server);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 19. GET /api/servers/:id/env/content -> getEnvContent
+// ---------------------------------------------------------------------------
+router.get(['/api/servers/:id/env/content', '/:id/env/content', '/servers/:id/env/content'], async (req, res) => {
+  try {
+    const server = getServerOr404(req, res);
+    if (!server) return;
+    const filePath = req.query.path;
+    if (!filePath) return res.status(400).json({ error: 'Ruta de archivo requerida' });
+    const result = await getEnvContent(server, filePath);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 20. POST /api/servers/:id/env/save -> saveEnvFile
+// ---------------------------------------------------------------------------
+router.post(['/api/servers/:id/env/save', '/:id/env/save', '/servers/:id/env/save'], async (req, res) => {
+  try {
+    const server = getServerOr404(req, res);
+    if (!server) return;
+    const { path: filePath, content } = req.body || {};
+    if (!filePath) return res.status(400).json({ error: 'Ruta de archivo requerida' });
+    const result = await saveEnvFile(server, filePath, content);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 21. GET /api/servers/:id/env/download -> download .env as file attachment
+// ---------------------------------------------------------------------------
+router.get(['/api/servers/:id/env/download', '/:id/env/download', '/servers/:id/env/download'], async (req, res) => {
+  try {
+    const server = getServerOr404(req, res);
+    if (!server) return;
+    const filePath = req.query.path;
+    if (!filePath) return res.status(400).json({ error: 'Ruta de archivo requerida' });
+    const { content } = await getEnvContent(server, filePath);
+    const fileName = path.basename(filePath) || '.env';
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.send(content);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

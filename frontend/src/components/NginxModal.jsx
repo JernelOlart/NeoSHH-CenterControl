@@ -113,7 +113,7 @@ export default function NginxModal({ server, isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-void-base/85 backdrop-blur-sm">
-      <div className="bg-elevated-surface rounded-cards-lg w-full max-w-3xl border border-border-smoke flex flex-col max-h-[88vh] overflow-hidden shadow-2xl">
+      <div className="bg-elevated-surface rounded-cards-lg w-full max-w-4xl border border-border-smoke flex flex-col h-[85vh] max-h-[90vh] overflow-hidden shadow-2xl">
 
         {/* Header */}
         <div className="p-4 border-b border-border-smoke/70 flex items-center justify-between gap-3 flex-shrink-0">
@@ -173,7 +173,7 @@ export default function NginxModal({ server, isOpen, onClose }) {
         )}
 
         {/* Body */}
-        <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex-1 overflow-hidden flex flex-col min-h-0">
           {loading ? (
             <div className="flex items-center justify-center py-16 text-fog-text gap-2 text-xs font-mono">
               <RefreshCw className="w-4 h-4 animate-spin text-electric-cyan" />
@@ -191,9 +191,9 @@ export default function NginxModal({ server, isOpen, onClose }) {
               <p className="text-xs text-fog-text">Nginx no detectado en este servidor</p>
             </div>
           ) : (
-            <div className="flex flex-1 overflow-hidden">
+            <div className="flex flex-1 overflow-hidden min-h-0">
               {/* Sidebar: site list */}
-              <div className="w-56 flex-shrink-0 border-r border-border-smoke/70 overflow-y-auto bg-deep-panel p-3 space-y-3">
+              <div className="w-56 sm:w-60 flex-shrink-0 border-r border-border-smoke/70 overflow-y-auto bg-deep-panel p-3 space-y-3">
                 {allSites.length === 0 ? (
                   <p className="text-xs text-fog-text font-mono px-1">Sin archivos de configuración encontrados.</p>
                 ) : (
@@ -213,7 +213,7 @@ export default function NginxModal({ server, isOpen, onClose }) {
                               onClick={() => handleSelectSite(site)}
                               className={`w-full text-left flex items-center gap-1.5 px-2 py-1.5 rounded-inputs text-[11px] font-mono transition ${
                                 selectedSite?.name === site.name
-                                  ? 'bg-electric-cyan/10 border border-electric-cyan/30 text-electric-cyan'
+                                  ? 'bg-electric-cyan/10 border border-electric-cyan/30 text-electric-cyan font-medium'
                                   : 'text-ash-text hover:text-cloud-white hover:bg-white/5'
                               }`}
                             >
@@ -232,7 +232,7 @@ export default function NginxModal({ server, isOpen, onClose }) {
               </div>
 
               {/* Editor pane */}
-              <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex-1 flex flex-col overflow-hidden min-h-0">
                 {!selectedSite ? (
                   <div className="flex-1 flex items-center justify-center text-xs text-fog-text font-mono">
                     <div className="text-center">
@@ -241,7 +241,7 @@ export default function NginxModal({ server, isOpen, onClose }) {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col flex-1 overflow-hidden p-3 gap-3">
+                  <div className="flex flex-col flex-1 overflow-hidden p-3 sm:p-4 gap-3 min-h-0">
                     <div className="flex items-center justify-between flex-shrink-0">
                       <span className="text-xs font-mono text-electric-cyan truncate">{selectedSite.path || selectedSite.name}</span>
                       <button
@@ -261,7 +261,7 @@ export default function NginxModal({ server, isOpen, onClose }) {
                       </div>
                     ) : (
                       <textarea
-                        className="flex-1 w-full bg-void-base border border-border-smoke rounded-inputs p-3 font-mono text-[11px] text-cloud-white resize-none focus:outline-none focus:border-electric-cyan leading-relaxed"
+                        className="flex-1 w-full bg-void-base border border-border-smoke rounded-inputs p-3 font-mono text-xs text-cloud-white resize-none focus:outline-none focus:border-electric-cyan leading-relaxed"
                         value={siteContent}
                         onChange={e => setSiteContent(e.target.value)}
                         spellCheck={false}

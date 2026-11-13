@@ -28,7 +28,8 @@ import {
   Radio,
   Layers,
   BarChart2,
-  StickyNote
+  StickyNote,
+  FileCode2
 } from 'lucide-react';
 
 export default function ServerCard({
@@ -50,6 +51,7 @@ export default function ServerCard({
   onOpenDockerStats,
   onOpenNginx,
   onOpenNotes,
+  onOpenEnv,
   onEdit,
   onDelete,
   onRefresh,
@@ -313,6 +315,13 @@ export default function ServerCard({
                   >
                     <StickyNote className="w-3.5 h-3.5 text-amber-300" />
                     <span>Notas del servidor (Markdown)</span>
+                  </button>
+                  <button
+                    onClick={() => { setMenuOpen(false); onOpenEnv(server); }}
+                    className="w-full text-left px-3 py-1.5 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
+                  >
+                    <FileCode2 className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Variables de entorno (.env)</span>
                   </button>
                   <button
                     onClick={() => { setMenuOpen(false); onOpenFirewall(server); }}

@@ -21,6 +21,7 @@ import DockerStatsModal from './components/DockerStatsModal';
 import NginxModal from './components/NginxModal';
 import NotesModal from './components/NotesModal';
 import AlertsPanel from './components/AlertsPanel';
+import EnvManagerModal from './components/EnvManagerModal';
 import {
   fetchServers,
   createServer,
@@ -60,6 +61,7 @@ export default function App() {
   const [dockerStatsServer, setDockerStatsServer] = useState(null);
   const [nginxServer, setNginxServer] = useState(null);
   const [notesServer, setNotesServer] = useState(null);
+  const [envServer, setEnvServer] = useState(null);
 
   // Terminal Tabs state
   const [activeSessions, setActiveSessions] = useState([]);
@@ -309,6 +311,7 @@ export default function App() {
                 onOpenDockerStats={setDockerStatsServer}
                 onOpenNginx={setNginxServer}
                 onOpenNotes={setNotesServer}
+                onOpenEnv={setEnvServer}
                 onEdit={(s) => {
                   setEditingServer(s);
                   setIsServerModalOpen(true);
@@ -499,6 +502,12 @@ export default function App() {
             alert(e.message);
           }
         }}
+      />
+
+      <EnvManagerModal
+        server={envServer}
+        isOpen={Boolean(envServer)}
+        onClose={() => setEnvServer(null)}
       />
 
       {/* Floating System Alerts (offline, disk >80%, RAM >90%) */}

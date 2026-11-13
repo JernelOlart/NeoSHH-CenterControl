@@ -20,7 +20,7 @@ export default function MetricsDetailModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-void-base/85 backdrop-blur-sm">
-      <div className="bg-elevated-surface rounded-cards-lg w-full max-w-2xl border border-border-smoke flex flex-col max-h-[92vh] overflow-hidden shadow-2xl">
+      <div className="bg-elevated-surface rounded-cards-lg w-full max-w-3xl border border-border-smoke flex flex-col max-h-[92vh] overflow-hidden shadow-2xl">
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-border-smoke/60 flex items-center justify-between">
           <div>

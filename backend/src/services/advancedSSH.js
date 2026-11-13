@@ -63,7 +63,7 @@ function sshExec(server, command, timeoutMs = 30000) {
 // 1. getLiveMetrics
 // ---------------------------------------------------------------------------
 export async function getLiveMetrics(server) {
-  const cmd = "cat /proc/stat | head -1 && sleep 1 && cat /proc/stat | head -1 && free -m && cat /proc/net/dev | grep -v lo | tail -1 && nproc && cat /proc/cpuinfo | grep 'model name' | head -1 && (cat /proc/loadavg 2>/dev/null || echo '0 0 0')";
+  const cmd = "cat /proc/stat | head -1 && sleep 0.5 && cat /proc/stat | head -1 && free -m && cat /proc/net/dev | grep -v lo | tail -1 && nproc && cat /proc/cpuinfo | grep 'model name' | head -1 && (cat /proc/loadavg 2>/dev/null || echo '0 0 0')";
   try {
     const { stdout } = await sshExec(server, cmd, 20000);
     const lines = stdout.split('\n').map(l => l.trim()).filter(Boolean);
@@ -134,10 +134,12 @@ export async function getLiveMetrics(server) {
       net
     };
   } catch (err) {
+    console.error(`[getLiveMetrics] Error for server ${server.name || server.id}:`, err.message);
     return {
       cpu: { percent: 0, model: 'Unknown', cores: 1, loadAvg: [0, 0, 0] },
       ram: { totalMb: 0, usedMb: 0, percent: 0 },
-      net: { rx_bytes: 0, tx_bytes: 0, interface: '' }
+      net: { rx_bytes: 0, tx_bytes: 0, interface: '' },
+      error: err.message
     };
   }
 }
@@ -557,5 +559,68 @@ export async function runSSHCommand(server, command) {
     return { output, exitCode: code };
   } catch (err) {
     return { output: err.message, exitCode: 1 };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 18. findEnvFiles
+// ---------------------------------------------------------------------------
+export async function findEnvFiles(server) {
+  try {
+    const cmd = `find /var/www /root /home /opt /srv /etc -maxdepth 5 -name ".env*" -not -path "*/node_modules/*" -not -path "*/.git/*" 2>/dev/null | head -50`;
+    const { stdout } = await sshExec(server, cmd, 15000);
+    const files = stdout.split('\n').map(s => s.trim()).filter(Boolean);
+    return { files };
+  } catch (err) {
+    return { files: [] };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 19. getEnvContent
+// ---------------------------------------------------------------------------
+export async function getEnvContent(server, filePath) {
+  if (!filePath) return { content: '', path: filePath, pairs: [] };
+  try {
+    const { stdout, code } = await sshExec(server, `cat "${filePath}" 2>/dev/null`, 15000);
+    if (code !== 0) {
+      return { content: '', path: filePath, pairs: [] };
+    }
+    const lines = stdout.split('\n');
+    const pairs = [];
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) {
+        continue;
+      }
+      const eqIdx = line.indexOf('=');
+      if (eqIdx !== -1) {
+        const key = line.slice(0, eqIdx).trim();
+        let val = line.slice(eqIdx + 1).trim();
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+          val = val.slice(1, -1);
+        }
+        const isSecret = /password|secret|key|token|auth|pwd|cred/i.test(key);
+        pairs.push({ key, value: val, isSecret });
+      }
+    }
+    return { content: stdout, path: filePath, pairs };
+  } catch (err) {
+    return { content: '', path: filePath, pairs: [] };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 20. saveEnvFile
+// ---------------------------------------------------------------------------
+export async function saveEnvFile(server, filePath, content) {
+  if (!filePath) return { success: false, error: 'Ruta de archivo requerida' };
+  try {
+    const b64 = Buffer.from(content || '', 'utf-8').toString('base64');
+    const writeCmd = `mkdir -p "$(dirname "${filePath}")" && echo "${b64}" | base64 -d > "${filePath}" && chmod 600 "${filePath}"`;
+    const { stderr, code } = await sshExec(server, writeCmd, 20000);
+    return { success: code === 0, error: code !== 0 ? stderr : null };
+  } catch (err) {
+    return { success: false, error: err.message };
   }
 }
