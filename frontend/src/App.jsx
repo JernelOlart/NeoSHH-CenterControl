@@ -23,6 +23,7 @@ import NotesModal from './components/NotesModal';
 import AlertsPanel from './components/AlertsPanel';
 import EnvManagerModal from './components/EnvManagerModal';
 import PowerManagementModal from './components/PowerManagementModal';
+import WebhookModal from './components/WebhookModal';
 import {
   fetchServers,
   createServer,
@@ -64,6 +65,7 @@ export default function App() {
   const [notesServer, setNotesServer] = useState(null);
   const [envServer, setEnvServer] = useState(null);
   const [powerServer, setPowerServer] = useState(null);
+  const [webhookServer, setWebhookServer] = useState(null);
 
   // Terminal Tabs state
   const [activeSessions, setActiveSessions] = useState([]);
@@ -306,6 +308,7 @@ export default function App() {
                 onOpenNotes={setNotesServer}
                 onOpenEnv={setEnvServer}
                 onOpenPower={setPowerServer}
+                onOpenWebhook={setWebhookServer}
                 onEdit={(s) => {
                   setEditingServer(s);
                   setIsServerModalOpen(true);
@@ -496,6 +499,12 @@ export default function App() {
         isOpen={Boolean(powerServer)}
         onClose={() => setPowerServer(null)}
         onServerUpdated={loadServers}
+      />
+
+      <WebhookModal
+        server={webhookServer}
+        isOpen={Boolean(webhookServer)}
+        onClose={() => setWebhookServer(null)}
       />
 
       {/* Floating System Alerts (offline, disk >80%, RAM >90%) */}

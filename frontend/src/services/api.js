@@ -490,3 +490,62 @@ export async function cleanServerDisk(serverId) {
   }
   return res.json();
 }
+
+// ---------------------------------------------------------------------------
+// Auto-Deploy Webhooks API
+// ---------------------------------------------------------------------------
+export async function fetchWebhookConfig(serverId) {
+  const res = await fetch(`${BASE_URL}/servers/${serverId}/webhook`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Error al obtener configuración de webhook');
+  }
+  return res.json();
+}
+
+export async function saveWebhookConfig(serverId, data) {
+  const res = await fetch(`${BASE_URL}/servers/${serverId}/webhook`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Error al guardar configuración de webhook');
+  }
+  return res.json();
+}
+
+export async function regenerateWebhookToken(serverId) {
+  const res = await fetch(`${BASE_URL}/servers/${serverId}/webhook/regenerate-token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Error al regenerar token');
+  }
+  return res.json();
+}
+
+export async function triggerManualDeploy(serverId, data = {}) {
+  const res = await fetch(`${BASE_URL}/servers/${serverId}/webhook/deploy`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Error al ejecutar despliegue');
+  }
+  return res.json();
+}
+
+export async function fetchDetectedRepos(serverId) {
+  const res = await fetch(`${BASE_URL}/servers/${serverId}/git/detect`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Error al detectar repositorios');
+  }
+  return res.json();
+}

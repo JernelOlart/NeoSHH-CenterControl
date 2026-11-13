@@ -30,7 +30,8 @@ import {
   BarChart2,
   StickyNote,
   FileCode2,
-  Power
+  Power,
+  Zap
 } from 'lucide-react';
 
 export default function ServerCard({
@@ -54,6 +55,7 @@ export default function ServerCard({
   onOpenNotes,
   onOpenEnv,
   onOpenPower,
+  onOpenWebhook,
   onEdit,
   onDelete,
   onRefresh,
@@ -102,7 +104,7 @@ export default function ServerCard({
         {/* Header row: Status, Name, Provider, Actions */}
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
+            <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto scrollbar-none mb-1.5">
               {isOnline ? (
                 <span className="flex items-center gap-1.5 text-[10px] font-mono px-2 py-0.5 rounded-pills bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -310,6 +312,16 @@ export default function ServerCard({
                   >
                     <GitBranch className="w-3.5 h-3.5 text-purple-400" />
                     <span>Control Git (Pull / Clonar)</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      if (onOpenWebhook) onOpenWebhook(server);
+                    }}
+                    className="w-full text-left px-3 py-1.5 text-electric-cyan hover:bg-electric-cyan/10 flex items-center gap-2"
+                  >
+                    <Zap className="w-3.5 h-3.5 text-electric-cyan" />
+                    <span>Auto-Deploy Webhook (CI/CD)</span>
                   </button>
                   <button
                     onClick={() => { setMenuOpen(false); onOpenNotes(server); }}

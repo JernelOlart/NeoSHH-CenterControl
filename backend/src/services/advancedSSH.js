@@ -1,4 +1,5 @@
 import { Client } from 'ssh2';
+import crypto from 'crypto';
 import { getSSHConfig } from '../sshService.js';
 
 // ---------------------------------------------------------------------------
@@ -682,4 +683,97 @@ export async function cleanDisk(server) {
   } catch (err) {
     return { success: false, error: err.message };
   }
+}
+
+// ---------------------------------------------------------------------------
+// 25. executeAutoDeploy (CI/CD Webhook deploy)
+// ---------------------------------------------------------------------------
+export async function executeAutoDeploy(server, options = {}) {
+  const {
+    repoPath,
+    branch = 'main',
+    script = '',
+    commitInfo = null,
+    triggeredBy = 'manual'
+  } = options;
+
+  if (!repoPath) {
+    throw new Error('La ruta del repositorio en el servidor es obligatoria.');
+  }
+
+  const safeRepoPath = repoPath.trim();
+  const safeBranch = (branch || 'main').trim();
+  const customScript = script ? script.trim() : '';
+
+  const deployCmd = `
+set -e
+if [ ! -d "${safeRepoPath}" ]; then
+  echo "ERROR: La carpeta ${safeRepoPath} no existe en el servidor." >&2
+  exit 1
+fi
+
+cd "${safeRepoPath}"
+echo "==> [Paso 1/3] Actualizando repositorio Git en: $(pwd)"
+echo "Rama objetivo: ${safeBranch}"
+
+git fetch origin "${safeBranch}" 2>&1
+git checkout "${safeBranch}" 2>&1
+git pull origin "${safeBranch}" 2>&1
+
+echo ""
+echo "Commit activo:"
+git log -1 --pretty=format:"• Hash: %h%n• Mensaje: %s%n• Autor: %an (%ar)" 2>&1
+echo ""
+
+echo "==> [Paso 2/3] Ejecutando comandos de despliegue y construcción..."
+${
+  customScript
+    ? customScript
+    : `if [ -f "docker-compose.yml" ] || [ -f "compose.yaml" ]; then
+  echo "Detectado docker-compose: recreando contenedores..."
+  (docker compose up -d --build 2>&1 || docker-compose up -d --build 2>&1)
+elif [ -f "package.json" ]; then
+  echo "Detectado package.json: instalando y construyendo..."
+  npm install --omit=dev 2>&1 && (npm run build 2>&1 || true)
+else
+  echo "Repositorio actualizado correctamente."
+fi`
+}
+
+echo ""
+echo "==> [Paso 3/3] ¡Despliegue finalizado exitosamente! [$(date)]"
+`;
+
+  const startTime = Date.now();
+  let status = 'success';
+  let output = '';
+  let error = null;
+
+  try {
+    const { stdout, stderr, code } = await sshExec(server, deployCmd, 180000); // 3 min timeout
+    output = stdout + (stderr ? `\n[STDERR]:\n${stderr}` : '');
+    if (code !== 0) {
+      status = 'failed';
+      error = stderr || `Proceso de despliegue terminó con código de error ${code}`;
+    }
+  } catch (err) {
+    status = 'failed';
+    error = err.message;
+    output = `Error durante la ejecución SSH:\n${err.message}`;
+  }
+
+  const durationMs = Date.now() - startTime;
+
+  return {
+    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    timestamp: new Date().toISOString(),
+    status,
+    durationMs,
+    branch: safeBranch,
+    repoPath: safeRepoPath,
+    triggeredBy,
+    commit: commitInfo,
+    output,
+    error
+  };
 }

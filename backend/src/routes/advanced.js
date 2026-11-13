@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { getServerById } from '../db.js';
+import crypto from 'crypto';
+import { getServerById, getServerByWebhookToken, recordDeployLog, updateServer } from '../db.js';
 import {
   getLiveMetrics,
   getSystemServices,
@@ -24,7 +25,8 @@ import {
   rebootServer,
   poweroffServer,
   dropCaches,
-  cleanDisk
+  cleanDisk,
+  executeAutoDeploy
 } from '../services/advancedSSH.js';
 import path from 'path';
 
@@ -407,5 +409,216 @@ router.post(['/api/servers/:id/power/clean-disk', '/:id/power/clean-disk', '/ser
     res.status(500).json({ error: err.message });
   }
 });
+
+// ---------------------------------------------------------------------------
+// 26. GET /api/servers/:id/webhook -> get webhook config
+// ---------------------------------------------------------------------------
+router.get(['/api/servers/:id/webhook', '/:id/webhook', '/servers/:id/webhook'], async (req, res) => {
+  try {
+    const server = getServerOr404(req, res);
+    if (!server) return;
+    let webhook = server.webhook;
+    if (!webhook || !webhook.token) {
+      webhook = {
+        enabled: false,
+        token: crypto.randomBytes(20).toString('hex'),
+        branch: 'main',
+        repoPath: '',
+        script: '',
+        secret: '',
+        history: [],
+        lastDeploy: null
+      };
+      updateServer(server.id, { webhook });
+    }
+    res.json(webhook);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 27. PUT /api/servers/:id/webhook -> save webhook config
+// ---------------------------------------------------------------------------
+router.put(['/api/servers/:id/webhook', '/:id/webhook', '/servers/:id/webhook'], async (req, res) => {
+  try {
+    const server = getServerOr404(req, res);
+    if (!server) return;
+    const { enabled, branch, repoPath, script, secret } = req.body;
+    const currentWebhook = server.webhook || {};
+    const updatedWebhook = {
+      ...currentWebhook,
+      enabled: Boolean(enabled),
+      branch: (branch || 'main').trim(),
+      repoPath: (repoPath || '').trim(),
+      script: (script || '').trim(),
+      secret: (secret || '').trim(),
+      token: currentWebhook.token || crypto.randomBytes(20).toString('hex')
+    };
+    updateServer(server.id, { webhook: updatedWebhook });
+    res.json(updatedWebhook);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 28. POST /api/servers/:id/webhook/regenerate-token
+// ---------------------------------------------------------------------------
+router.post(['/api/servers/:id/webhook/regenerate-token', '/:id/webhook/regenerate-token'], async (req, res) => {
+  try {
+    const server = getServerOr404(req, res);
+    if (!server) return;
+    const currentWebhook = server.webhook || {};
+    const newToken = crypto.randomBytes(20).toString('hex');
+    const updatedWebhook = {
+      ...currentWebhook,
+      token: newToken
+    };
+    updateServer(server.id, { webhook: updatedWebhook });
+    res.json({ token: newToken });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 29. POST /api/servers/:id/webhook/deploy -> Manual deploy trigger
+// ---------------------------------------------------------------------------
+router.post(['/api/servers/:id/webhook/deploy', '/:id/webhook/deploy'], async (req, res) => {
+  try {
+    const server = getServerOr404(req, res);
+    if (!server) return;
+    const webhook = server.webhook || {};
+    const repoPath = req.body.repoPath || webhook.repoPath;
+    const branch = req.body.branch || webhook.branch || 'main';
+    const script = req.body.script !== undefined ? req.body.script : webhook.script;
+
+    if (!repoPath) {
+      return res.status(400).json({ error: 'Debes configurar la ruta del repositorio en el servidor.' });
+    }
+
+    const deployResult = await executeAutoDeploy(server, {
+      repoPath,
+      branch,
+      script,
+      commitInfo: {
+        id: 'manual',
+        message: 'Despliegue manual iniciado desde el panel NeoShh Control',
+        author: 'Admin'
+      },
+      triggeredBy: 'manual'
+    });
+
+    recordDeployLog(server.id, deployResult);
+    res.json(deployResult);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 30. POST & GET /api/webhooks/deploy/:token -> Public GitHub / GitLab Webhook
+// ---------------------------------------------------------------------------
+const handlePublicWebhook = async (req, res) => {
+  const { token } = req.params;
+  if (!token) return res.status(400).json({ error: 'Token requerido' });
+
+  try {
+    const server = getServerByWebhookToken(token, true);
+    if (!server) {
+      return res.status(404).json({ error: 'Webhook token no válido o servidor inexistente.' });
+    }
+
+    const webhook = server.webhook || {};
+    if (!webhook.enabled) {
+      return res.status(403).json({
+        error: 'El Webhook de auto-deploy está desactivado para este servidor.'
+      });
+    }
+
+    if (!webhook.repoPath) {
+      return res.status(400).json({
+        error: 'El servidor no tiene configurada una ruta de repositorio para el despliegue.'
+      });
+    }
+
+    // Ping check (e.g. GET request from browser or webhook test)
+    if (req.method === 'GET') {
+      return res.json({
+        ok: true,
+        server: server.name,
+        branch: webhook.branch,
+        repoPath: webhook.repoPath,
+        enabled: webhook.enabled,
+        message: 'Webhook activo y listo para recibir peticiones POST de GitHub o GitLab.'
+      });
+    }
+
+    // Parse Git push event payload
+    const body = req.body || {};
+    const ref = body.ref || '';
+    let pushedBranch = null;
+    if (ref.startsWith('refs/heads/')) {
+      pushedBranch = ref.replace('refs/heads/', '');
+    }
+
+    // Extract commit info
+    let commitInfo = null;
+    if (body.head_commit) {
+      commitInfo = {
+        id: body.head_commit.id ? body.head_commit.id.slice(0, 7) : 'head',
+        message: body.head_commit.message || 'Push commit',
+        author: body.head_commit.author?.name || 'Git'
+      };
+    } else if (Array.isArray(body.commits) && body.commits.length > 0) {
+      const c = body.commits[0];
+      commitInfo = {
+        id: c.id ? c.id.slice(0, 7) : 'commit',
+        message: c.message || 'Push commit',
+        author: c.author?.name || 'Git'
+      };
+    }
+
+    // Check branch filter
+    const targetBranch = webhook.branch || 'main';
+    if (pushedBranch && targetBranch !== '*' && pushedBranch !== targetBranch) {
+      return res.json({
+        ignored: true,
+        message: `Despliegue ignorado: la rama recibida (${pushedBranch}) no coincide con la rama configurada (${targetBranch}).`
+      });
+    }
+
+    // Execute auto-deploy
+    const deployResult = await executeAutoDeploy(server, {
+      repoPath: webhook.repoPath,
+      branch: targetBranch,
+      script: webhook.script,
+      commitInfo,
+      triggeredBy: 'webhook'
+    });
+
+    recordDeployLog(server.id, deployResult);
+
+    if (deployResult.status === 'failed') {
+      return res.status(500).json({
+        success: false,
+        message: 'Fallo al ejecutar despliegue',
+        deploy: deployResult
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Despliegue completado con éxito',
+      deploy: deployResult
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+router.post(['/api/webhooks/deploy/:token', '/webhooks/deploy/:token'], handlePublicWebhook);
+router.get(['/api/webhooks/deploy/:token', '/webhooks/deploy/:token'], handlePublicWebhook);
 
 export default router;

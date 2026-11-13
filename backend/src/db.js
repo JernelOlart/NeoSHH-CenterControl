@@ -140,6 +140,7 @@ export function updateServer(id, data) {
   }
   if (data.provider !== undefined) current.provider = data.provider;
   if (data.notes !== undefined) current.notes = data.notes;
+  if (data.webhook !== undefined) current.webhook = data.webhook;
   current.updatedAt = now;
 
   servers[index] = current;
@@ -185,5 +186,30 @@ export function updateServerMetrics(id, { status, metrics, error = null }) {
 
   writeAll(servers);
   return getServerById(id, false);
+}
+
+export function getServerByWebhookToken(token, includeSecrets = true) {
+  if (!token) return null;
+  const servers = readAll();
+  const server = servers.find(s => s.webhook && s.webhook.token === token);
+  if (!server) return null;
+  return getServerById(server.id, includeSecrets);
+}
+
+export function recordDeployLog(serverId, deployLog) {
+  const servers = readAll();
+  const index = servers.findIndex(s => s.id === serverId);
+  if (index === -1) return null;
+  if (!servers[index].webhook) {
+    servers[index].webhook = {};
+  }
+  servers[index].webhook.lastDeploy = deployLog;
+  if (!Array.isArray(servers[index].webhook.history)) {
+    servers[index].webhook.history = [];
+  }
+  servers[index].webhook.history.unshift(deployLog);
+  servers[index].webhook.history = servers[index].webhook.history.slice(0, 10);
+  writeAll(servers);
+  return servers[index].webhook;
 }
 
