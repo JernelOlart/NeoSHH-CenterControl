@@ -1,0 +1,139 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-void-base: #0e0918;
+  --color-elevated-surface: #1a1624;
+  --color-deep-panel: #1b1728;
+  --color-muted-shell: #2c2834;
+  --color-border-smoke: #3e3a46;
+  --color-ash-text: #d1cece;
+  --color-fog-text: #9d9797;
+  --color-silver-rail: #e5e7eb;
+  --color-cloud-white: #ffffff;
+  --color-steel-muted: #48556a;
+  --color-electric-cyan: #17baed;
+  --color-electric-cyan-hover: #1ad2ff;
+  --color-dark-teal: #081a26;
+  --color-teal-slate: #16222b;
+  --color-teal-slate-border: rgba(23, 186, 237, 0.35);
+  --color-ember-cta: #fd8925;
+  --color-ember-scorch: #ff492c;
+  --color-crimson-glow: #56312d;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-void-base);
+    color: var(--color-ash-text);
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  }
+
+  .font-display-light {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 0.90;
+    letter-spacing: -0.02em;
+  }
+
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* === EXACT BUTTON PALETTE FROM REFERENCE IMAGE === */
+
+/* Primary Button: Vibrant Electric Cyan pill with dark text */
+.btn-cyan-primary {
+  background-color: #17baed;
+  color: #081a26;
+  font-weight: 600;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 16px rgba(23, 186, 237, 0.35);
+}
+
+.btn-cyan-primary:hover {
+  background-color: #1ad2ff;
+  box-shadow: 0 0 24px rgba(23, 186, 237, 0.55);
+  transform: translateY(-1px);
+}
+
+.btn-cyan-primary:active {
+  transform: scale(0.98);
+}
+
+/* Secondary Button: Dark teal-slate frosted pill with cyan hairline border */
+.btn-cyan-secondary {
+  background-color: rgba(22, 34, 43, 0.75);
+  color: #ffffff;
+  font-weight: 500;
+  border: 1px solid rgba(23, 186, 237, 0.35);
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(8px);
+}
+
+.btn-cyan-secondary:hover {
+  background-color: rgba(29, 46, 59, 0.9);
+  border-color: rgba(23, 186, 237, 0.65);
+  color: #ffffff;
+  box-shadow: 0 0 16px rgba(23, 186, 237, 0.2);
+  transform: translateY(-1px);
+}
+
+.btn-cyan-secondary:active {
+  transform: scale(0.98);
+}
+
+/* Circular / Icon variant */
+.btn-cyan-icon {
+  background-color: rgba(22, 34, 43, 0.75);
+  color: #d1cece;
+  border: 1px solid rgba(23, 186, 237, 0.25);
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-cyan-icon:hover {
+  background-color: rgba(29, 46, 59, 0.9);
+  border-color: rgba(23, 186, 237, 0.6);
+  color: #17baed;
+}
+
+/* Card inset glow */
+.card-inset-glow {
+  background: #1a1624;
+  box-shadow: rgba(255, 255, 255, 0.08) 0px 0px 0px 1px inset, rgba(23, 186, 237, 0.25) 0px 1px 0px 0px inset;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0e0918;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2c2834;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3e3a46;
+}

@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+frontend/dist/
+frontend/node_modules/
+backend/node_modules/
+
+# Local Data & Secrets
+datadev_Secret/
+data/
+*.pem
+*.key
+*.id_rsa
+.env
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*

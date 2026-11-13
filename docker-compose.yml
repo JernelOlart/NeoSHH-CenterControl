@@ -1,0 +1,16 @@
+services:
+  neoscale-ssh:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: neoscale-ssh-manager
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - DATA_DIR=/app/data
+      - NODE_ENV=production
+    volumes:
+      - ./data:/app/data
+
