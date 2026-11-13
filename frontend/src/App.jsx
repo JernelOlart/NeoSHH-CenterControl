@@ -17,7 +17,7 @@ import {
   refreshServer,
   refreshAllServers
 } from './services/api';
-import { Server, Plus, RefreshCw, Terminal, ArrowRight } from 'lucide-react';
+import { Server, Plus, RefreshCw, Terminal, ArrowRight, Globe, Github, ExternalLink } from 'lucide-react';
 
 export default function App() {
   const [servers, setServers] = useState([]);
@@ -287,15 +287,63 @@ export default function App() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="w-full mt-auto py-4 px-4 sm:px-6 lg:px-8 border-t border-border-smoke/60 bg-void-base">
-        <div className="max-w-[1240px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] font-mono text-fog-text">
-          <div className="flex items-center gap-2">
-            <span className="text-cloud-white font-semibold">NeoShh Control</span>
-            <span>•</span>
-            <span className="text-electric-cyan">VPS Manager</span>
+      {/* Footer & Credits */}
+      <footer className="w-full mt-auto py-5 px-4 sm:px-6 lg:px-8 border-t border-border-smoke/60 bg-void-base">
+        <div className="max-w-[1240px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          {/* Brand info */}
+          <div className="flex flex-col sm:flex-row items-center gap-2 text-[11px] font-mono text-fog-text text-center sm:text-left">
+            <div className="flex items-center gap-2">
+              <span className="text-cloud-white font-semibold">NeoShh Control</span>
+              <span>•</span>
+              <span className="text-electric-cyan">VPS Command Center</span>
+            </div>
+            <span className="hidden sm:inline">•</span>
+            <div>Terminal SSH • SFTP • Docker • Git • Firewall UFW</div>
           </div>
-          <div>Terminal SSH • SFTP • Docker • Puertos & Servicios</div>
+
+          {/* Credit Buttons */}
+          <div className="flex items-center gap-2 flex-wrap justify-center">
+            <span className="text-[11px] font-mono text-fog-text mr-1">Créditos:</span>
+
+            {/* Jernel Systems */}
+            <a
+              href="https://www.jernelsystems.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-cyan-secondary px-3 py-1.5 text-xs font-mono inline-flex items-center gap-1.5 hover:border-electric-cyan/60 hover:text-cloud-white transition group"
+              title="Visitar www.jernelsystems.com"
+            >
+              <Globe className="w-3.5 h-3.5 text-electric-cyan group-hover:scale-110 transition-transform" />
+              <span>jernelsystems.com</span>
+              <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+            </a>
+
+            {/* Neotech Solutions */}
+            <a
+              href="https://neotechsolutions.mx"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-cyan-secondary px-3 py-1.5 text-xs font-mono inline-flex items-center gap-1.5 hover:border-electric-cyan/60 hover:text-cloud-white transition group"
+              title="Visitar neotechsolutions.mx"
+            >
+              <Globe className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
+              <span>neotechsolutions.mx</span>
+              <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+            </a>
+
+            {/* GitHub JernelOlart */}
+            <a
+              href="https://github.com/JernelOlart"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-cyan-secondary px-3 py-1.5 text-xs font-mono inline-flex items-center gap-1.5 hover:border-electric-cyan/60 hover:text-cloud-white transition group"
+              title="GitHub @JernelOlart"
+            >
+              <Github className="w-3.5 h-3.5 text-electric-cyan group-hover:scale-110 transition-transform" />
+              <span>@JernelOlart</span>
+              <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+            </a>
+          </div>
         </div>
       </footer>
 

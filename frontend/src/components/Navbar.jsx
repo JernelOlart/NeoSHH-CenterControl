@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, RefreshCw, Search, Terminal, X, ArrowRight, Zap } from 'lucide-react';
+import { Plus, RefreshCw, Search, Terminal, X, ArrowRight, Zap, Globe, Github, ExternalLink } from 'lucide-react';
 
 export default function Navbar({
   searchTerm,
@@ -26,6 +26,38 @@ export default function Navbar({
             <span className="font-display-light text-xl sm:text-2xl text-cloud-white tracking-tight">
               NeoShh <span className="text-electric-cyan font-normal">Control</span>
             </span>
+            <div className="hidden lg:flex items-center gap-1.5 ml-2 pl-3 border-l border-border-smoke/70">
+              <a
+                href="https://www.jernelsystems.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] font-mono text-fog-text hover:text-electric-cyan transition flex items-center gap-1"
+                title="jernelsystems.com"
+              >
+                <span>jernelsystems</span>
+              </a>
+              <span className="text-border-smoke text-xs">•</span>
+              <a
+                href="https://neotechsolutions.mx"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] font-mono text-fog-text hover:text-electric-cyan transition flex items-center gap-1"
+                title="neotechsolutions.mx"
+              >
+                <span>neotech</span>
+              </a>
+              <span className="text-border-smoke text-xs">•</span>
+              <a
+                href="https://github.com/JernelOlart"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] font-mono text-fog-text hover:text-electric-cyan transition flex items-center gap-1"
+                title="GitHub @JernelOlart"
+              >
+                <Github className="w-3 h-3 text-electric-cyan" />
+                <span>@JernelOlart</span>
+              </a>
+            </div>
           </div>
         </div>
 
