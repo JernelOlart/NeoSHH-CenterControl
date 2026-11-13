@@ -10,9 +10,10 @@ import {
   AlertCircle,
   Clock,
   ArrowRight,
-  GitCommit
+  GitCommit,
+  Archive
 } from 'lucide-react';
-import { detectGitRepos, fetchGitStatus, gitPull, gitClone } from '../services/api';
+import { detectGitRepos, fetchGitStatus, gitPull, gitClone, downloadRepoZip } from '../services/api';
 
 export default function GitManagerModal({ server, isOpen, onClose }) {
   const [tab, setTab] = useState('repos'); // 'repos' | 'clone'
@@ -22,6 +23,7 @@ export default function GitManagerModal({ server, isOpen, onClose }) {
   const [repoStatus, setRepoStatus] = useState(null);
   const [loading, setLoading] = useState(false);
   const [pulling, setPulling] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [cloning, setCloning] = useState(false);
   const [pullMessage, setPullMessage] = useState(null);
   const [error, setError] = useState(null);
@@ -99,6 +101,18 @@ export default function GitManagerModal({ server, isOpen, onClose }) {
       alert(`Error al ejecutar git pull: ${err.message}`);
     } finally {
       setPulling(false);
+    }
+  };
+
+  const handleDownloadZip = async (repoPath = selectedRepoPath) => {
+    if (!repoPath) return;
+    setDownloading(true);
+    try {
+      await downloadRepoZip(server.id, repoPath);
+    } catch (err) {
+      alert(`Error al descargar repositorio: ${err.message}`);
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -252,15 +266,27 @@ export default function GitManagerModal({ server, isOpen, onClose }) {
                     </p>
                   </div>
 
-                  <button
-                    onClick={handlePull}
-                    disabled={pulling}
-                    className="btn-cyan-primary px-4 py-2 text-xs font-semibold self-start sm:self-center"
-                  >
-                    <Download className={`w-3.5 h-3.5 ${pulling ? 'animate-bounce' : ''}`} />
-                    <span>{pulling ? 'Actualizando...' : 'Ejecutar Git Pull'}</span>
-                    <ArrowRight className="w-3 h-3 opacity-80" />
-                  </button>
+                  <div className="flex items-center gap-2 self-start sm:self-center flex-wrap">
+                    <button
+                      onClick={handlePull}
+                      disabled={pulling}
+                      className="btn-cyan-primary px-3.5 py-2 text-xs font-semibold flex items-center gap-1.5"
+                      title="Ejecutar git pull en el servidor"
+                    >
+                      <Download className={`w-3.5 h-3.5 ${pulling ? 'animate-bounce' : ''}`} />
+                      <span>{pulling ? 'Actualizando...' : 'Git Pull'}</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleDownloadZip(selectedRepoPath)}
+                      disabled={downloading}
+                      className="btn-cyan-secondary px-3.5 py-2 text-xs font-semibold text-electric-cyan flex items-center gap-1.5 hover:border-electric-cyan/60"
+                      title="Descargar repositorio completo empaquetado en .zip directamente a tu máquina"
+                    >
+                      <Archive className={`w-3.5 h-3.5 ${downloading ? 'animate-spin' : ''}`} />
+                      <span>{downloading ? 'Empaquetando...' : 'Descargar ZIP'}</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Pull result notification */}

@@ -5,8 +5,9 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { initDb, getAllServers, getServerById, createServer, updateServer, deleteServer, updateServerMetrics } from './db.js';
-import { fetchServerMetrics, executeSSHCommand, listSFTPDirectory, readSFTPFile, writeSFTPFile } from './sshService.js';
+import { fetchServerMetrics, executeSSHCommand, listSFTPDirectory, readSFTPFile, writeSFTPFile, streamSFTPArchive } from './sshService.js';
 import { setupWebSocket } from './websocket.js';
+import advancedRouter from './routes/advanced.js';
 
 dotenv.config();
 
@@ -17,6 +18,9 @@ app.use(cors());
 app.use(express.json());
 
 initDb();
+
+// Mount advanced feature routes (live metrics, systemd, logs, cron, packages, network, compose, nginx, docker stats)
+app.use(advancedRouter);
 
 // --- API ROUTES ---
 
@@ -360,6 +364,36 @@ app.post('/api/servers/:id/git/clone', async (req, res) => {
     res.json({ success: result.code === 0, output: result.stdout || result.stderr });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Git: Download repository as zip archive
+app.get('/api/servers/:id/git/download', async (req, res) => {
+  try {
+    const server = getServerById(req.params.id, true);
+    if (!server) return res.status(404).json({ error: 'Servidor no encontrado' });
+    const repoPath = req.query.path;
+    if (!repoPath) return res.status(400).json({ error: 'Ruta de repositorio requerida' });
+    await streamSFTPArchive(server, repoPath, res);
+  } catch (err) {
+    if (!res.headersSent) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+});
+
+// SFTP File Manager: Download folder or directory as zip archive
+app.get('/api/servers/:id/files/download', async (req, res) => {
+  try {
+    const server = getServerById(req.params.id, true);
+    if (!server) return res.status(404).json({ error: 'Servidor no encontrado' });
+    const dirPath = req.query.path;
+    if (!dirPath) return res.status(400).json({ error: 'Ruta no especificada' });
+    await streamSFTPArchive(server, dirPath, res);
+  } catch (err) {
+    if (!res.headersSent) {
+      res.status(500).json({ error: err.message });
+    }
   }
 });
 

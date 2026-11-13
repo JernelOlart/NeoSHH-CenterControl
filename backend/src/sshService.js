@@ -1,4 +1,5 @@
 import { Client } from 'ssh2';
+import path from 'path';
 
 export function getSSHConfig(server, timeoutMs = 10000) {
   const config = {
@@ -365,6 +366,89 @@ export function writeSFTPFile(server, filePath, content) {
       });
     });
     conn.on('error', err => reject(err));
+    conn.connect(sshConfig);
+  });
+}
+
+export async function streamSFTPArchive(server, remoteDirPath, res) {
+  const cleanPath = remoteDirPath.trim().replace(/\/+$/, '');
+  const baseName = path.basename(cleanPath) || 'repository';
+  const timestamp = Date.now();
+  const tmpId = `archive_${baseName}_${timestamp}_${Math.floor(Math.random() * 1000)}`;
+  const tmpZip = `/tmp/${tmpId}.zip`;
+  const tmpTar = `/tmp/${tmpId}.tar.gz`;
+
+  // Pack directory into zip or tar.gz (supports zip, python3, or tar fallback)
+  const packCmd = `
+if command -v zip >/dev/null 2>&1; then
+  cd "${cleanPath}" && zip -rq "${tmpZip}" . && echo "READY:ZIP:${tmpZip}"
+elif command -v python3 >/dev/null 2>&1; then
+  python3 -c "import shutil; shutil.make_archive('/tmp/${tmpId}', 'zip', '${cleanPath}')" 2>/dev/null && echo "READY:ZIP:${tmpZip}"
+else
+  cd "${cleanPath}" && tar -czf "${tmpTar}" . && echo "READY:TAR:${tmpTar}"
+fi
+`;
+
+  const { stdout, stderr, code } = await executeSSHCommand(server, packCmd);
+  if (code !== 0 || !stdout.includes('READY:')) {
+    throw new Error(stderr || stdout || 'Error al empaquetar repositorio en el servidor VPS');
+  }
+
+  const readyLine = stdout.split('\n').find(l => l.startsWith('READY:'));
+  const parts = readyLine.split(':');
+  const format = parts[1]; // 'ZIP' or 'TAR'
+  const remoteFile = parts.slice(2).join(':').trim();
+
+  const isZip = format === 'ZIP';
+  const filename = `${baseName}.${isZip ? 'zip' : 'tar.gz'}`;
+  const contentType = isZip ? 'application/zip' : 'application/gzip';
+
+  res.setHeader('Content-Type', contentType);
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+  let sshConfig;
+  try {
+    sshConfig = getSSHConfig(server, 20000);
+  } catch (err) {
+    throw err;
+  }
+
+  return new Promise((resolve, reject) => {
+    const conn = new Client();
+
+    conn.on('ready', () => {
+      conn.sftp((err, sftp) => {
+        if (err) {
+          conn.end();
+          return reject(err);
+        }
+
+        const readStream = sftp.createReadStream(remoteFile);
+
+        const cleanup = () => {
+          sftp.unlink(remoteFile, () => {
+            conn.end();
+          });
+        };
+
+        readStream.on('error', (streamErr) => {
+          cleanup();
+          reject(streamErr);
+        });
+
+        readStream.on('close', () => {
+          cleanup();
+          resolve();
+        });
+
+        readStream.pipe(res);
+      });
+    });
+
+    conn.on('error', (connErr) => {
+      reject(connErr);
+    });
+
     conn.connect(sshConfig);
   });
 }

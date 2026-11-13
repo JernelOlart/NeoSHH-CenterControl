@@ -9,13 +9,26 @@ import FileManagerModal from './components/FileManagerModal';
 import DockerManagerModal from './components/DockerManagerModal';
 import GitManagerModal from './components/GitManagerModal';
 import FirewallModal from './components/FirewallModal';
+import LiveMetricsModal from './components/LiveMetricsModal';
+import CommandRunnerModal from './components/CommandRunnerModal';
+import SystemdModal from './components/SystemdModal';
+import LiveLogsModal from './components/LiveLogsModal';
+import CronModal from './components/CronModal';
+import PackageManagerModal from './components/PackageManagerModal';
+import NetworkModal from './components/NetworkModal';
+import DockerComposeModal from './components/DockerComposeModal';
+import DockerStatsModal from './components/DockerStatsModal';
+import NginxModal from './components/NginxModal';
+import NotesModal from './components/NotesModal';
+import AlertsPanel from './components/AlertsPanel';
 import {
   fetchServers,
   createServer,
   updateServer,
   deleteServer,
   refreshServer,
-  refreshAllServers
+  refreshAllServers,
+  saveServerNotes
 } from './services/api';
 import { Server, Plus, RefreshCw, Terminal, ArrowRight, Globe, Github, ExternalLink } from 'lucide-react';
 
@@ -36,6 +49,17 @@ export default function App() {
   const [dockerServer, setDockerServer] = useState(null);
   const [gitServer, setGitServer] = useState(null);
   const [firewallServer, setFirewallServer] = useState(null);
+  const [liveMetricsServer, setLiveMetricsServer] = useState(null);
+  const [commandServer, setCommandServer] = useState(null);
+  const [systemdServer, setSystemdServer] = useState(null);
+  const [logsServer, setLogsServer] = useState(null);
+  const [cronServer, setCronServer] = useState(null);
+  const [packagesServer, setPackagesServer] = useState(null);
+  const [networkServer, setNetworkServer] = useState(null);
+  const [composeServer, setComposeServer] = useState(null);
+  const [dockerStatsServer, setDockerStatsServer] = useState(null);
+  const [nginxServer, setNginxServer] = useState(null);
+  const [notesServer, setNotesServer] = useState(null);
 
   // Terminal Tabs state
   const [activeSessions, setActiveSessions] = useState([]);
@@ -274,6 +298,17 @@ export default function App() {
                 onOpenDocker={setDockerServer}
                 onOpenGit={setGitServer}
                 onOpenFirewall={setFirewallServer}
+                onOpenLiveMetrics={setLiveMetricsServer}
+                onOpenCommandRunner={setCommandServer}
+                onOpenSystemd={setSystemdServer}
+                onOpenLogs={setLogsServer}
+                onOpenCron={setCronServer}
+                onOpenPackages={setPackagesServer}
+                onOpenNetwork={setNetworkServer}
+                onOpenCompose={setComposeServer}
+                onOpenDockerStats={setDockerStatsServer}
+                onOpenNginx={setNginxServer}
+                onOpenNotes={setNotesServer}
                 onEdit={(s) => {
                   setEditingServer(s);
                   setIsServerModalOpen(true);
@@ -391,6 +426,83 @@ export default function App() {
         isOpen={Boolean(firewallServer)}
         onClose={() => setFirewallServer(null)}
       />
+
+      <LiveMetricsModal
+        server={liveMetricsServer}
+        isOpen={Boolean(liveMetricsServer)}
+        onClose={() => setLiveMetricsServer(null)}
+      />
+
+      <CommandRunnerModal
+        server={commandServer}
+        isOpen={Boolean(commandServer)}
+        onClose={() => setCommandServer(null)}
+      />
+
+      <SystemdModal
+        server={systemdServer}
+        isOpen={Boolean(systemdServer)}
+        onClose={() => setSystemdServer(null)}
+      />
+
+      <LiveLogsModal
+        server={logsServer}
+        isOpen={Boolean(logsServer)}
+        onClose={() => setLogsServer(null)}
+      />
+
+      <CronModal
+        server={cronServer}
+        isOpen={Boolean(cronServer)}
+        onClose={() => setCronServer(null)}
+      />
+
+      <PackageManagerModal
+        server={packagesServer}
+        isOpen={Boolean(packagesServer)}
+        onClose={() => setPackagesServer(null)}
+      />
+
+      <NetworkModal
+        server={networkServer}
+        isOpen={Boolean(networkServer)}
+        onClose={() => setNetworkServer(null)}
+      />
+
+      <DockerComposeModal
+        server={composeServer}
+        isOpen={Boolean(composeServer)}
+        onClose={() => setComposeServer(null)}
+      />
+
+      <DockerStatsModal
+        server={dockerStatsServer}
+        isOpen={Boolean(dockerStatsServer)}
+        onClose={() => setDockerStatsServer(null)}
+      />
+
+      <NginxModal
+        server={nginxServer}
+        isOpen={Boolean(nginxServer)}
+        onClose={() => setNginxServer(null)}
+      />
+
+      <NotesModal
+        server={notesServer}
+        isOpen={Boolean(notesServer)}
+        onClose={() => setNotesServer(null)}
+        onSave={async (id, notes) => {
+          try {
+            await saveServerNotes(id, notes);
+            setServers(prev => prev.map(s => s.id === id ? { ...s, notes } : s));
+          } catch (e) {
+            alert(e.message);
+          }
+        }}
+      />
+
+      {/* Floating System Alerts (offline, disk >80%, RAM >90%) */}
+      <AlertsPanel servers={servers} />
 
       <TerminalModal
         activeSessions={activeSessions}

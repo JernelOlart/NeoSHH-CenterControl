@@ -19,7 +19,16 @@ import {
   ArrowRight,
   AlertTriangle,
   GitBranch,
-  Shield
+  Shield,
+  Activity,
+  Play,
+  FileText,
+  Clock,
+  Package,
+  Radio,
+  Layers,
+  BarChart2,
+  StickyNote
 } from 'lucide-react';
 
 export default function ServerCard({
@@ -30,6 +39,17 @@ export default function ServerCard({
   onOpenDocker,
   onOpenGit,
   onOpenFirewall,
+  onOpenLiveMetrics,
+  onOpenCommandRunner,
+  onOpenSystemd,
+  onOpenLogs,
+  onOpenCron,
+  onOpenPackages,
+  onOpenNetwork,
+  onOpenCompose,
+  onOpenDockerStats,
+  onOpenNginx,
+  onOpenNotes,
   onEdit,
   onDelete,
   onRefresh,
@@ -163,53 +183,140 @@ export default function ServerCard({
             {menuOpen && (
               <>
                 <div className="fixed inset-0 z-20" onClick={() => setMenuOpen(false)} />
-                <div className="absolute right-0 mt-1 top-full w-48 bg-deep-panel border border-border-smoke rounded-cards py-1 z-30 text-xs shadow-frosted font-sans">
+                <div className="absolute right-0 mt-1 top-full w-56 bg-deep-panel border border-border-smoke rounded-cards py-1.5 z-30 text-xs shadow-2xl font-sans max-h-96 overflow-y-auto">
+                  {/* Monitoreo */}
+                  <div className="px-3 py-1 text-[10px] font-mono text-fog-text uppercase tracking-wider">
+                    Monitoreo & Logs
+                  </div>
                   <button
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onOpenDetails(server);
-                    }}
-                    className="w-full text-left px-3 py-2 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
+                    onClick={() => { setMenuOpen(false); onOpenLiveMetrics(server); }}
+                    className="w-full text-left px-3 py-1.5 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
                   >
-                    <Info className="w-3.5 h-3.5 text-electric-cyan" />
-                    <span>Ver especificaciones y servicios</span>
+                    <Activity className="w-3.5 h-3.5 text-electric-cyan" />
+                    <span>Métricas en vivo (CPU/RAM/Red)</span>
                   </button>
                   <button
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onOpenFiles(server);
-                    }}
-                    className="w-full text-left px-3 py-2 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
+                    onClick={() => { setMenuOpen(false); onOpenLogs(server); }}
+                    className="w-full text-left px-3 py-1.5 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Logs del sistema en vivo</span>
+                  </button>
+                  <button
+                    onClick={() => { setMenuOpen(false); onOpenNetwork(server); }}
+                    className="w-full text-left px-3 py-1.5 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
+                  >
+                    <Radio className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Red & Conexiones (ss/ip)</span>
+                  </button>
+                  <button
+                    onClick={() => { setMenuOpen(false); onOpenDetails(server); }}
+                    className="w-full text-left px-3 py-1.5 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
+                  >
+                    <Info className="w-3.5 h-3.5 text-electric-cyan" />
+                    <span>Especificaciones completas</span>
+                  </button>
+
+                  <div className="h-[1px] bg-border-smoke/60 my-1" />
+
+                  {/* Operaciones */}
+                  <div className="px-3 py-1 text-[10px] font-mono text-fog-text uppercase tracking-wider">
+                    Control & Servicios
+                  </div>
+                  <button
+                    onClick={() => { setMenuOpen(false); onOpenCommandRunner(server); }}
+                    className="w-full text-left px-3 py-1.5 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
+                  >
+                    <Play className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Ejecutor de comandos rápidos</span>
+                  </button>
+                  <button
+                    onClick={() => { setMenuOpen(false); onOpenSystemd(server); }}
+                    className="w-full text-left px-3 py-1.5 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
+                  >
+                    <Cpu className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Servicios Systemd</span>
+                  </button>
+                  <button
+                    onClick={() => { setMenuOpen(false); onOpenCron(server); }}
+                    className="w-full text-left px-3 py-1.5 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
+                  >
+                    <Clock className="w-3.5 h-3.5 text-blue-400" />
+                    <span>Cron Jobs & Tareas</span>
+                  </button>
+                  <button
+                    onClick={() => { setMenuOpen(false); onOpenPackages(server); }}
+                    className="w-full text-left px-3 py-1.5 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
+                  >
+                    <Package className="w-3.5 h-3.5 text-yellow-400" />
+                    <span>Gestor de Paquetes</span>
+                  </button>
+
+                  <div className="h-[1px] bg-border-smoke/60 my-1" />
+
+                  {/* Docker & Web */}
+                  <div className="px-3 py-1 text-[10px] font-mono text-fog-text uppercase tracking-wider">
+                    Docker & Aplicaciones
+                  </div>
+                  <button
+                    onClick={() => { setMenuOpen(false); onOpenDocker(server); }}
+                    className="w-full text-left px-3 py-1.5 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
+                  >
+                    <Box className="w-3.5 h-3.5 text-blue-400" />
+                    <span>Contenedores Docker</span>
+                  </button>
+                  <button
+                    onClick={() => { setMenuOpen(false); onOpenCompose(server); }}
+                    className="w-full text-left px-3 py-1.5 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
+                  >
+                    <Layers className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>Docker Compose</span>
+                  </button>
+                  <button
+                    onClick={() => { setMenuOpen(false); onOpenDockerStats(server); }}
+                    className="w-full text-left px-3 py-1.5 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
+                  >
+                    <BarChart2 className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Estadísticas Docker en vivo</span>
+                  </button>
+                  <button
+                    onClick={() => { setMenuOpen(false); onOpenNginx(server); }}
+                    className="w-full text-left px-3 py-1.5 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
+                  >
+                    <Globe className="w-3.5 h-3.5 text-green-400" />
+                    <span>Nginx Virtual Hosts</span>
+                  </button>
+
+                  <div className="h-[1px] bg-border-smoke/60 my-1" />
+
+                  {/* Archivos & Git & Notas */}
+                  <div className="px-3 py-1 text-[10px] font-mono text-fog-text uppercase tracking-wider">
+                    Archivos & Seguridad
+                  </div>
+                  <button
+                    onClick={() => { setMenuOpen(false); onOpenFiles(server); }}
+                    className="w-full text-left px-3 py-1.5 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
                   >
                     <FolderOpen className="w-3.5 h-3.5 text-electric-cyan" />
                     <span>Gestor de archivos (SFTP)</span>
                   </button>
                   <button
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onOpenDocker(server);
-                    }}
-                    className="w-full text-left px-3 py-2 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
-                  >
-                    <Box className="w-3.5 h-3.5 text-blue-400" />
-                    <span>Gestionar Docker</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onOpenGit(server);
-                    }}
-                    className="w-full text-left px-3 py-2 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
+                    onClick={() => { setMenuOpen(false); onOpenGit(server); }}
+                    className="w-full text-left px-3 py-1.5 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
                   >
                     <GitBranch className="w-3.5 h-3.5 text-purple-400" />
                     <span>Control Git (Pull / Clonar)</span>
                   </button>
                   <button
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onOpenFirewall(server);
-                    }}
-                    className="w-full text-left px-3 py-2 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
+                    onClick={() => { setMenuOpen(false); onOpenNotes(server); }}
+                    className="w-full text-left px-3 py-1.5 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
+                  >
+                    <StickyNote className="w-3.5 h-3.5 text-amber-300" />
+                    <span>Notas del servidor (Markdown)</span>
+                  </button>
+                  <button
+                    onClick={() => { setMenuOpen(false); onOpenFirewall(server); }}
+                    className="w-full text-left px-3 py-1.5 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
                   >
                     <Shield className="w-3.5 h-3.5 text-emerald-400" />
                     <span>Firewall & Puertos UFW</span>
@@ -219,18 +326,21 @@ export default function ServerCard({
                       href={webUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full text-left px-3 py-2 text-emerald-300 hover:bg-muted-shell flex items-center gap-2"
+                      className="w-full text-left px-3 py-1.5 text-emerald-300 hover:bg-muted-shell flex items-center gap-2"
                     >
                       <Globe className="w-3.5 h-3.5 text-emerald-400" />
                       <span>Abrir web en navegador</span>
                     </a>
                   )}
+
+                  <div className="h-[1px] bg-border-smoke/60 my-1" />
+
                   <button
                     onClick={(e) => {
                       setMenuOpen(false);
                       copySshCommand(e);
                     }}
-                    className="w-full text-left px-3 py-2 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
+                    className="w-full text-left px-3 py-1.5 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
                   >
                     <Copy className="w-3.5 h-3.5 text-fog-text" />
                     <span>Copiar comando SSH</span>
@@ -240,21 +350,21 @@ export default function ServerCard({
                       setMenuOpen(false);
                       onEdit(server);
                     }}
-                    className="w-full text-left px-3 py-2 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
+                    className="w-full text-left px-3 py-1.5 text-ash-text hover:bg-muted-shell hover:text-cloud-white flex items-center gap-2"
                   >
                     <Edit2 className="w-3.5 h-3.5 text-fog-text" />
                     <span>Editar servidor</span>
                   </button>
-                  <div className="h-[1px] bg-border-smoke my-1" />
+                  <div className="h-[1px] bg-border-smoke/60 my-1" />
                   <button
                     onClick={() => {
                       setMenuOpen(false);
                       onDelete(server.id);
                     }}
-                    className="w-full text-left px-3 py-2 text-rose-400 hover:bg-rose-500/10 flex items-center gap-2 font-medium"
+                    className="w-full text-left px-3 py-1.5 text-rose-400 hover:bg-rose-500/10 flex items-center gap-2 font-medium"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
-                    <span>Eliminar</span>
+                    <span>Eliminar servidor</span>
                   </button>
                 </div>
               </>
@@ -342,8 +452,8 @@ export default function ServerCard({
 
       {/* Action Buttons Toolbar: High-Density & Functional */}
       <div className="mt-4 pt-3 border-t border-border-smoke/60 flex flex-col gap-2">
-        {/* Row 1: Primary Connect & Web/Mac */}
-        <div className="flex items-center gap-2">
+        {/* Row 1: Primary Connect, Live Metrics & Web/Mac */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Web Terminal */}
           <button
             onClick={() => onConnectWeb(server)}
@@ -355,13 +465,23 @@ export default function ServerCard({
             <ArrowRight className="w-3 h-3 opacity-80" />
           </button>
 
+          {/* Live Metrics */}
+          <button
+            onClick={() => onOpenLiveMetrics(server)}
+            className="btn-cyan-secondary py-1.5 px-2.5 text-xs text-electric-cyan hover:border-electric-cyan/60 flex items-center gap-1"
+            title="Ver métricas en vivo en tiempo real (CPU, RAM, Red)"
+          >
+            <Activity className="w-3.5 h-3.5 text-electric-cyan" />
+            <span className="hidden xs:inline">Live</span>
+          </button>
+
           {/* Web Browser button (if web detected) or Mac Terminal */}
           {hasWeb ? (
             <a
               href={webUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-cyan-secondary py-1.5 px-3 text-xs text-emerald-300 border-emerald-500/40 hover:border-emerald-400"
+              className="btn-cyan-secondary py-1.5 px-2.5 text-xs text-emerald-300 border-emerald-500/40 hover:border-emerald-400"
               title="Abrir web en el navegador"
             >
               <Globe className="w-3.5 h-3.5 text-emerald-400" />
@@ -371,7 +491,7 @@ export default function ServerCard({
             <button
               onClick={openMacTerminal}
               title="Lanzar en Terminal nativo de macOS"
-              className="btn-cyan-secondary py-1.5 px-3 text-xs"
+              className="btn-cyan-secondary py-1.5 px-2.5 text-xs"
             >
               <ExternalLink className="w-3.5 h-3.5 text-electric-cyan" />
               <span>Mac</span>
@@ -379,20 +499,20 @@ export default function ServerCard({
           )}
         </div>
 
-        {/* Row 2: Secondary Quick Tools (Files, Docker, Git, Ports) */}
-        <div className="grid grid-cols-4 gap-1 sm:gap-1.5">
+        {/* Row 2: Secondary Quick Tools (Files, Docker, Git, Cmds, Ports) */}
+        <div className="grid grid-cols-5 gap-1">
           <button
             onClick={() => onOpenFiles(server)}
-            className="btn-cyan-secondary py-1 px-1.5 text-[10px] sm:text-[11px] font-mono justify-center"
+            className="btn-cyan-secondary py-1 px-1 text-[10px] sm:text-[11px] font-mono justify-center"
             title="Gestor de archivos SFTP"
           >
             <FolderOpen className="w-3 h-3 text-electric-cyan" />
-            <span>Archivos</span>
+            <span>Files</span>
           </button>
 
           <button
             onClick={() => onOpenDocker(server)}
-            className="btn-cyan-secondary py-1 px-1.5 text-[10px] sm:text-[11px] font-mono justify-center"
+            className="btn-cyan-secondary py-1 px-1 text-[10px] sm:text-[11px] font-mono justify-center"
             title="Gestionar contenedores Docker"
           >
             <Box className="w-3 h-3 text-blue-400" />
@@ -401,7 +521,7 @@ export default function ServerCard({
 
           <button
             onClick={() => onOpenGit(server)}
-            className="btn-cyan-secondary py-1 px-1.5 text-[10px] sm:text-[11px] font-mono justify-center"
+            className="btn-cyan-secondary py-1 px-1 text-[10px] sm:text-[11px] font-mono justify-center"
             title="Control de repositorios Git"
           >
             <GitBranch className="w-3 h-3 text-purple-400" />
@@ -409,12 +529,21 @@ export default function ServerCard({
           </button>
 
           <button
+            onClick={() => onOpenCommandRunner(server)}
+            className="btn-cyan-secondary py-1 px-1 text-[10px] sm:text-[11px] font-mono justify-center"
+            title="Ejecutar comandos rápidos"
+          >
+            <Play className="w-3 h-3 text-emerald-400" />
+            <span>Cmds</span>
+          </button>
+
+          <button
             onClick={() => onOpenFirewall(server)}
-            className="btn-cyan-secondary py-1 px-1.5 text-[10px] sm:text-[11px] font-mono justify-center"
+            className="btn-cyan-secondary py-1 px-1 text-[10px] sm:text-[11px] font-mono justify-center"
             title="Firewall y reglas de puertos UFW"
           >
-            <Shield className="w-3 h-3 text-emerald-400" />
-            <span>Puertos</span>
+            <Shield className="w-3 h-3 text-cyan-400" />
+            <span>UFW</span>
           </button>
         </div>
       </div>

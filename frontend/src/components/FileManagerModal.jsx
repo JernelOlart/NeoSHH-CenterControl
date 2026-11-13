@@ -10,9 +10,10 @@ import {
   Trash2,
   Check,
   FilePlus,
-  ArrowRight
+  ArrowRight,
+  Archive
 } from 'lucide-react';
-import { fetchFiles, readFilePreview, saveFile, deleteFile } from '../services/api';
+import { fetchFiles, readFilePreview, saveFile, deleteFile, downloadDirectoryZip } from '../services/api';
 
 export default function FileManagerModal({ server, isOpen, onClose }) {
   const [currentPath, setCurrentPath] = useState('/root');
@@ -24,10 +25,22 @@ export default function FileManagerModal({ server, isOpen, onClose }) {
   const [loadingFile, setLoadingFile] = useState(false);
   const [savingFile, setSavingFile] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [downloadingZip, setDownloadingZip] = useState(false);
 
   // New file creation form
   const [creatingFile, setCreatingFile] = useState(false);
   const [newFileName, setNewFileName] = useState('');
+
+  const handleDownloadCurrentFolder = async () => {
+    setDownloadingZip(true);
+    try {
+      await downloadDirectoryZip(server.id, currentPath);
+    } catch (err) {
+      alert(`Error al descargar carpeta: ${err.message}`);
+    } finally {
+      setDownloadingZip(false);
+    }
+  };
 
   const loadDirectory = async (targetPath) => {
     if (!server) return;
@@ -167,6 +180,15 @@ export default function FileManagerModal({ server, isOpen, onClose }) {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleDownloadCurrentFolder}
+              disabled={downloadingZip || loading}
+              className="btn-cyan-secondary px-3 py-1.5 text-xs font-mono text-electric-cyan hover:border-electric-cyan/60 flex items-center gap-1.5"
+              title="Descargar carpeta actual como archivo comprimido .zip"
+            >
+              <Archive className={`w-3.5 h-3.5 ${downloadingZip ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">{downloadingZip ? 'Empaquetando...' : 'Descargar Carpeta (.zip)'}</span>
+            </button>
             <button
               onClick={() => setCreatingFile(!creatingFile)}
               className="btn-cyan-secondary px-3 py-1.5 text-xs font-mono"
