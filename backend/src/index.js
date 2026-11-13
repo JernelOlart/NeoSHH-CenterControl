@@ -311,23 +311,44 @@ app.get('/api/servers/:id/git/detect', async (req, res) => {
   }
 });
 
-// Git: Repo Status (branch, last commits, status)
+// Git: Repo Status (branch, branches list, last commits, status, remote)
 app.get('/api/servers/:id/git/status', async (req, res) => {
   try {
     const server = getServerById(req.params.id, true);
     if (!server) return res.status(404).json({ error: 'Servidor no encontrado' });
     const repoPath = req.query.path;
     if (!repoPath) return res.status(400).json({ error: 'Ruta de repositorio requerida' });
-    const cmd = `cd "${repoPath}" && git branch --show-current && echo "---LOG---" && git log -n 5 --oneline && echo "---STATUS---" && git status -s`;
+    const cmd = `cd "${repoPath}" && git branch --show-current && echo "---BRANCHES---" && git branch -a && echo "---REMOTE---" && (git remote get-url origin 2>/dev/null || echo "") && echo "---LOG---" && git log -n 10 --pretty=format:"%h|||%s|||%an|||%cr" && echo "---STATUS---" && git status -s`;
     const { stdout, stderr, code } = await executeSSHCommand(server, cmd);
     if (code !== 0) {
       return res.status(400).json({ error: stderr || 'No es un repositorio Git válido' });
     }
-    const [branchPart, rest] = stdout.split('---LOG---');
-    const [logPart, statusPart] = (rest || '').split('---STATUS---');
+    const [branchPart, rest1] = stdout.split('---BRANCHES---');
+    const [branchesPart, rest2] = (rest1 || '').split('---REMOTE---');
+    const [remotePart, rest3] = (rest2 || '').split('---LOG---');
+    const [logPart, statusPart] = (rest3 || '').split('---STATUS---');
+
+    const rawBranches = (branchesPart || '')
+      .split('\n')
+      .map(b => b.replace(/^\*?\s+/, '').trim())
+      .filter(b => b && !b.includes('->'));
+    const uniqueBranches = Array.from(new Set(rawBranches.map(b => b.replace(/^remotes\/origin\//, ''))));
+
+    const commits = (logPart || '').trim().split('\n').filter(Boolean).map(line => {
+      const parts = line.split('|||');
+      return {
+        hash: parts[0] || '',
+        subject: parts[1] || '',
+        author: parts[2] || '',
+        time: parts[3] || ''
+      };
+    });
+
     res.json({
       branch: (branchPart || '').trim(),
-      commits: (logPart || '').trim().split('\n').filter(Boolean),
+      branches: uniqueBranches,
+      remoteUrl: (remotePart || '').trim(),
+      commits,
       status: (statusPart || '').trim()
     });
   } catch (err) {
@@ -345,6 +366,67 @@ app.post('/api/servers/:id/git/pull', async (req, res) => {
     const cmd = `cd "${repoPath}" && git pull`;
     const result = await executeSSHCommand(server, cmd);
     res.json({ success: result.code === 0, output: result.stdout || result.stderr });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Git: Checkout (branch or commit)
+app.post('/api/servers/:id/git/checkout', async (req, res) => {
+  try {
+    const server = getServerById(req.params.id, true);
+    if (!server) return res.status(404).json({ error: 'Servidor no encontrado' });
+    const { path: repoPath, target } = req.body;
+    if (!repoPath || !target) return res.status(400).json({ error: 'Ruta y destino (rama/commit) requeridos' });
+    const safeTarget = target.trim().replace(/[^a-zA-Z0-9_\-./]/g, '');
+    const cmd = `cd "${repoPath}" && git checkout "${safeTarget}"`;
+    const result = await executeSSHCommand(server, cmd);
+    res.json({ success: result.code === 0, output: result.stdout || result.stderr });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Git: Fetch all
+app.post('/api/servers/:id/git/fetch', async (req, res) => {
+  try {
+    const server = getServerById(req.params.id, true);
+    if (!server) return res.status(404).json({ error: 'Servidor no encontrado' });
+    const { path: repoPath } = req.body;
+    if (!repoPath) return res.status(400).json({ error: 'Ruta requerida' });
+    const cmd = `cd "${repoPath}" && git fetch --all --prune`;
+    const result = await executeSSHCommand(server, cmd);
+    res.json({ success: result.code === 0, output: result.stdout || result.stderr || 'Fetch completado' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Git: Reset hard (discard local uncommitted changes)
+app.post('/api/servers/:id/git/reset', async (req, res) => {
+  try {
+    const server = getServerById(req.params.id, true);
+    if (!server) return res.status(404).json({ error: 'Servidor no encontrado' });
+    const { path: repoPath } = req.body;
+    if (!repoPath) return res.status(400).json({ error: 'Ruta requerida' });
+    const cmd = `cd "${repoPath}" && git reset --hard HEAD && git clean -fd`;
+    const result = await executeSSHCommand(server, cmd);
+    res.json({ success: result.code === 0, output: result.stdout || result.stderr || 'Cambios descartados exitosamente' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Git: Stash
+app.post('/api/servers/:id/git/stash', async (req, res) => {
+  try {
+    const server = getServerById(req.params.id, true);
+    if (!server) return res.status(404).json({ error: 'Servidor no encontrado' });
+    const { path: repoPath, action } = req.body;
+    if (!repoPath) return res.status(400).json({ error: 'Ruta requerida' });
+    const cmd = action === 'pop' ? `cd "${repoPath}" && git stash pop` : `cd "${repoPath}" && git stash`;
+    const result = await executeSSHCommand(server, cmd);
+    res.json({ success: result.code === 0, output: result.stdout || result.stderr || 'Operación stash completada' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

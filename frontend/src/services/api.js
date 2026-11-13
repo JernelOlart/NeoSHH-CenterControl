@@ -171,6 +171,50 @@ export async function gitClone(serverId, data) {
   return res.json();
 }
 
+export async function gitCheckout(serverId, path, target) {
+  const res = await fetch(`${BASE_URL}/servers/${serverId}/git/checkout`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path, target })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Error al cambiar de rama/commit');
+  return data;
+}
+
+export async function gitFetch(serverId, path) {
+  const res = await fetch(`${BASE_URL}/servers/${serverId}/git/fetch`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Error al ejecutar git fetch');
+  return data;
+}
+
+export async function gitReset(serverId, path) {
+  const res = await fetch(`${BASE_URL}/servers/${serverId}/git/reset`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Error al descartar cambios');
+  return data;
+}
+
+export async function gitStash(serverId, path, action = 'push') {
+  const res = await fetch(`${BASE_URL}/servers/${serverId}/git/stash`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path, action })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Error al ejecutar git stash');
+  return data;
+}
+
 // Firewall APIs
 export async function fetchFirewall(serverId) {
   const res = await fetch(`${BASE_URL}/servers/${serverId}/firewall`);
